@@ -1,12 +1,15 @@
 import { useTheme } from '../hooks/useTheme'
 import { useEffect, useRef, useState } from "react"
-
 import maplibregl, { Map as MapLibreMap, Marker, Popup } from "maplibre-gl"
+import gsap from "gsap"
 
 import "maplibre-gl/dist/maplibre-gl.css"
 import { osmProviders } from '../lib/osmProviders'
+import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
-import type { Vehicle, RoutePolyline, BusStopData } from "../types"
+import type { Vehicle, RoutePolyline, BusStopData, Route, LiveVehiclesList } from "../types"
+
+const REFRESH = 60
 
 export default function App() {
   const { isDark, toggle } = useTheme()
@@ -14,12 +17,16 @@ export default function App() {
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const map = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
+  const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
   const countdownRef = useRef<any>(null)
 
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
+  const [liveVehiclesList, setLiveVehiclesList] = useState<LiveVehiclesList>({ buses: [], trams: [] })
+  const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B", "75A", "75B"])
   const [routePolyline, setRoutePolyline] = useState<RoutePolyline[]>([])
   const [routeBusStops, setRouteBusStops] = useState<BusStopData[]>([])
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
+  const [selectedBusStop, setSelectedBusStop] = useState<BusStopData | null>(null)
 
   // load map
   useEffect(() => {
@@ -48,13 +55,26 @@ export default function App() {
   // change dark/light map style
   useEffect(() => {
     if (!map.current) return
+
+    map.current.once("styledata", () => {
+      markersRef.current.forEach((marker) => {
+        marker.addTo(map.current!)
+      })
+
+      if (routePolyline.length) {
+        addRoute(routePolyline, routeBusStops)
+      }
+    })
+
     map.current.setStyle(isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty)
   }, [isDark])
 
   // fetch vehicles
   useEffect(() => {
     let isRunning = false
-    let count = 60
+    let count = REFRESH
+
+    fetchLiveVehiclesList()
 
     const fetchData = async () => {
       if (isRunning) return
@@ -73,7 +93,7 @@ export default function App() {
         countdownRef.current.textContent = count
       }
       if (count <= 0) {
-        count = 60
+        count = REFRESH
         fetchData()
       }
     }, 1000)
@@ -81,7 +101,7 @@ export default function App() {
     return () => clearInterval(interval)
   }, [])
 
-  // update markers when vehicles change
+  // update or create markers when vehicles change
   useEffect(() => {
     if (!map.current) return
 
@@ -96,14 +116,16 @@ export default function App() {
     })
 
     vehicles.forEach(vehicle => {
+      if (!shownLines.includes(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) return
+
       const isBus = vehicle.vehType === "A"
       const color = isBus ? "#18295e" : "#7e2014"
 
       const el = document.createElement("div")
-      el.style.cssText = `cursor: pointer; opacity: 0.95;`
+      el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 10;`
 
       el.innerHTML = `
-        <svg width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));">
+        <svg width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
           <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
         </svg>
         <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
@@ -134,7 +156,17 @@ export default function App() {
       const existingMarker = markersRef.current.get(vehicle.vehId)
 
       if (existingMarker) {
-        existingMarker.setLngLat([vehicle.lng, vehicle.lat])
+        const current = existingMarker.getLngLat()
+        gsap.to(current, {
+          lng: vehicle.lng,
+          lat: vehicle.lat,
+          duration: .4,
+          ease: "power2.inOut",
+          onUpdate: () => {
+            existingMarker.setLngLat([current.lng, current.lat])
+          }
+        })
+        
         // update element content
         const existingEl = existingMarker.getElement()
         const existingDest = existingEl.querySelector("#dest")
@@ -156,10 +188,18 @@ export default function App() {
         const marker = new Marker({ element: el, anchor: "bottom-left" })
           .setLngLat([vehicle.lng, vehicle.lat])
           .addTo(map.current!)
+        
+        gsap.from(el, {
+          scale: .3,
+          opacity: 0,
+          duration: .4,
+          ease: "power2.inOut"
+        })
 
         el.addEventListener("click", (e) => {
           e.stopPropagation()
           setSelectedVehicle(vehicle)
+          getRoute(vehicle)
         })
 
         markersRef.current.set(vehicle.vehId, marker)
@@ -167,11 +207,128 @@ export default function App() {
     })
   }, [vehicles])
 
+  // FUNCTIONS
+  async function fetchLiveVehiclesList() {
+    await fetch("https://v2.szymon-pira.workers.dev/list")
+      .then(res => res.json())
+      .then(data => setLiveVehiclesList(data))
+  }
+
+  async function getRoute(veh: Vehicle) {
+    console.log("gr", veh.routeId)
+    const stopsMap = new Map(stops.map(s => [s.id, s]))
+    const polyline: RoutePolyline[] = []
+    const routeStops: BusStopData[] = []
+    const processedStopIds = new Set()
+
+    const routeData: Route = await fetch(`https://v2.szymon-pira.workers.dev/routes/${veh.routeId ? veh.routeId : veh.nextRouteId}`)
+      .then(res => res.json())
+    
+    routeData.stops.forEach(segment => {
+      const startStop = stopsMap.get(segment.startStopID)
+
+      if (startStop) {
+        polyline.push([startStop.y, startStop.x ])
+
+        if (!processedStopIds.has(segment.startStopID)) {
+          routeStops.push({
+            id: startStop.id,
+            n: startStop.n,
+            x: startStop.x,
+            y: startStop.y,
+            z: startStop.z
+          })
+          processedStopIds.add(segment.startStopID)
+        }
+
+        if (segment.geoPoints && segment.geoPoints.length > 0) {
+          segment.geoPoints.forEach(pt => {
+            polyline.push([ pt.y, pt.x ])
+          })
+        }
+      }
+    })
+
+    addRoute(polyline, routeStops)
+
+    setRouteBusStops(routeStops)
+    setRoutePolyline(polyline)
+  }
+
+  function addRoute(polyline: [number, number][], busStops: BusStopData[]): void {
+    if (map.current?.getLayer("route-line")) map.current?.removeLayer("route-line")
+    if (map.current?.getSource("route"))     map.current?.removeSource("route")
+
+    map.current?.addSource("route", {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "LineString",
+          coordinates: polyline.map(([lat, lng]) => [lng, lat])
+        },
+      },
+    })
+
+    map.current?.addLayer({
+      id: "route-line",
+      type: "line",
+      source: "route",
+      layout: {
+        "line-join": "round",
+        "line-cap": "round"
+      },
+      paint: {
+        "line-color": "#333",
+        "line-width": 4
+      }
+    })
+
+    BSMarkersRef.current.forEach((marker, id) => {
+      marker.remove()
+      BSMarkersRef.current.delete(id)
+    })
+
+    busStops.forEach(stop => {
+      let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
+
+      const el = document.createElement('div')
+      el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size: 0rem; border: 2px solid #666; zIndex: 1;`
+      el.textContent = '.'
+
+      const marker = new Marker({ element: el, anchor: "center"})
+        .setLngLat([stop.x, stop.y])
+        .addTo(map.current!)
+
+      BSMarkersRef.current.set(stop.id, marker)
+
+      el.addEventListener("click", (e) => {
+        e.stopPropagation()
+        setSelectedBusStop(stop)
+      })
+    })
+  }
+
+  function removeRoute(): void {
+    if (map.current?.getLayer("route-line")) map.current?.removeLayer("route-line")
+    if (map.current?.getSource("route"))     map.current?.removeSource("route")
+
+    BSMarkersRef.current.forEach((marker, id) => {
+      marker.remove()
+      BSMarkersRef.current.delete(id)
+    })
+  }
+
+  console.log(liveVehiclesList)
+
   return (
     <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
       <BottomSheet>
-        <h2 className="text-lg font-semibold mb-3">Linie</h2>
-        <p>Tutaj twoja zawartość...</p>
+        <h2 className="text-lg font-semibold mb-3" onClick={removeRoute}>Linie</h2>
+        <div className='flex flex-wrap gap-2'>
+          {liveVehiclesList.buses.map((line) => <p>{line}</p> )}
+        </div>
       </BottomSheet>
 
 

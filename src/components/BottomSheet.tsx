@@ -47,7 +47,7 @@ export default function Menu({ children, title }: Props) {
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         backdropFilter: "blur(20px) saturate(180%)",
       }}
-      className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50
+      className="fixed bottom-0 left-1/2 -translate-x-1/2 lg:right-0 w-full max-w-lg z-50
         bg-white/75 dark:bg-neutral-900/75
         border border-white/40 dark:border-white/10
         rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
