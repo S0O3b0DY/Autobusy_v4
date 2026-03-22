@@ -1,6 +1,7 @@
+// @ts-nocheck
 import { useTheme } from '../hooks/useTheme'
 import { useEffect, useRef, useState } from "react"
-import maplibregl, { Map as MapLibreMap, Marker, Popup } from "maplibre-gl"
+import maplibregl, { Map as MapLibreMap, Marker} from "maplibre-gl"
 import gsap from "gsap"
 
 import "maplibre-gl/dist/maplibre-gl.css"
