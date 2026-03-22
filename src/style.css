@@ -2,16 +2,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Manrope:wght@200..800&display=swap');
 
 html {
-    font-family: 'Manrope', sans-serif;
+    font-family: 'Geist', sans-serif;
     -webkit-font-smoothing: antialiased;
-  }
+}
 
 @layer base {
   :root {
-    --font-sans: 'Manrope', sans-serif;
+    --font-sans: 'Geist', sans-serif;
     --font-mono: 'Geist Mono', monospace;
   }
 

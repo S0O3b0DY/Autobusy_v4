@@ -7,6 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css"
 import { osmProviders } from '../lib/osmProviders'
 import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
+import Menu from '../components/Menu'
 import type { Vehicle, RoutePolyline, BusStopData, Route, LiveVehiclesList } from "../types"
 
 const REFRESH = 60
@@ -325,10 +326,7 @@ export default function App() {
   return (
     <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
       <BottomSheet>
-        <h2 className="text-lg font-semibold mb-3" onClick={removeRoute}>Linie</h2>
-        <div className='flex flex-wrap gap-2'>
-          {liveVehiclesList.buses.map((line) => <p>{line}</p> )}
-        </div>
+        <Menu />
       </BottomSheet>
 
 
