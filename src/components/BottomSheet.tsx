@@ -1,7 +1,7 @@
 import { useRef, useEffect, useCallback } from "react"
 import { SliderAlt, Search, GitCommit, Bus } from "@boxicons/react"
 import clsx from "clsx"
-import { useMenuStore } from "../lib/store"
+import { useAppStore } from "../lib/store"
 
 const SNAPS = [75, Math.round(window.innerHeight * 0.45), window.innerHeight - 40]
 const nearest = (h: number) => SNAPS.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a))
@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function BottomSheet({ children, title }: Props) {
-  const { menuState, setMenuState } = useMenuStore()
+  const { menuState, setMenuState, selectedVehicle, selectedBusStop } = useAppStore()
 
   const sheetRef    = useRef<HTMLDivElement>(null)
   const handleRef   = useRef<HTMLDivElement>(null)
@@ -94,11 +94,13 @@ export default function BottomSheet({ children, title }: Props) {
       target = nearest(current)
     }
 
-    // if (target === SNAPS[0]) setMenuState(0)
-    // if (target === SNAPS[1]) setMenuState(1)
-
     setHeight(target, true)
-  }, [setHeight])
+
+    if (startH.current === SNAPS[0] && target > SNAPS[0] && menuState === 0) {
+      setMenuState(1) // Filtruj
+    }
+
+  }, [setHeight, menuState])
 
   // mouse
   useEffect(() => {
@@ -132,10 +134,16 @@ export default function BottomSheet({ children, title }: Props) {
   }, [onDown, onMove, onUp])
 
   useEffect(() => {
+    console.log(menuState)
     if (!sheetRef.current) return
     if (menuState !== 0) setHeight(SNAPS[1], true)
     if (menuState === 0) setHeight(SNAPS[0], true)
   }, [menuState])
+
+  useEffect(() => {
+    if (selectedBusStop !== null) setMenuState(3)
+    if (selectedVehicle !== null) setMenuState(4)
+  }, [selectedBusStop, selectedVehicle])
 
   return (
     <div
@@ -189,19 +197,19 @@ export default function BottomSheet({ children, title }: Props) {
           </span>
         </button>
 
-        <button className="flex flex-col items-center justify-center transition-active active:scale-90" onClick={() => setMenuState(menuState === 3 ? 0 : 3)}>
+        {selectedBusStop && <button className="flex flex-col items-center justify-center transition-active active:scale-90" onClick={() => setMenuState(menuState === 3 ? 0 : 3)}>
           <GitCommit  className={clsx("text-[24px]", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
-            Trasa
+            Przystanek
           </span>
-        </button>
+        </button>}
 
-        <button className="flex flex-col items-center justify-center transition-active active:scale-90" onClick={() => setMenuState(menuState === 4 ? 0 : 4)}>
+        {selectedVehicle && <button className="flex flex-col items-center justify-center transition-active active:scale-90" onClick={() => setMenuState(menuState === 4 ? 0 : 4)}>
           <Bus  className={clsx("text-[24px]", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             Pojazd
           </span>
-        </button>
+        </button>}
       </div>
     </div>
   )

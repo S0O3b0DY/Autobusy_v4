@@ -9,6 +9,30 @@ html {
     -webkit-font-smoothing: antialiased;
 }
 
+/* --- GLOBALNY IOS SCROLLBAR KILLER --- */
+
+/* 1. Wyłączamy paski dla Chrome, Safari, Edge i nowszych Oper */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 2. Wyłączamy paski dla Firefoxa */
+* {
+  scrollbar-width: none !important;
+}
+
+/* 3. Wyłączamy paski dla starego Edge i IE */
+* {
+  -ms-overflow-style: none !important;
+}
+
+/* 4. Dodatkowa optymalizacja pod mobile (smooth scrolling) */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
 @layer base {
   :root {
     --font-sans: 'Geist', sans-serif;

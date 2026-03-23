@@ -10,11 +10,14 @@ import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import type { Vehicle, RoutePolyline, BusStopData, Route, LiveVehiclesList } from "../types"
+import { useAppStore } from "../lib/store"
+
 
 const REFRESH = 60
 
 export default function App() {
   const { isDark, toggle } = useTheme()
+  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop } = useAppStore()
 
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const map = useRef<MapLibreMap | null>(null)
@@ -27,8 +30,6 @@ export default function App() {
   const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B", "75A", "75B"])
   const [routePolyline, setRoutePolyline] = useState<RoutePolyline[]>([])
   const [routeBusStops, setRouteBusStops] = useState<BusStopData[]>([])
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null)
-  const [selectedBusStop, setSelectedBusStop] = useState<BusStopData | null>(null)
 
   // load map
   useEffect(() => {
@@ -121,13 +122,28 @@ export default function App() {
       if (!shownLines.includes(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) return
 
       const isBus = vehicle.vehType === "A"
-      const color = isBus ? "#18295e" : "#7e2014"
+      let color = isBus ? "#18295e" : "#7e2014"
+
+      function cropLine(str: string | undefined): string {
+        console.log(str ? str.replace(/[a-zA-Z]$/, "") : "", vehicle.lineNum)
+        return str ? str.replace(/[a-zA-Z]$/, "") : ""
+      }
+
+      if (vehicle.vehType === "A") {
+        if (cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) color = "#2a4aa3"
+        if (selectedVehicle?.sideNum === vehicle.sideNum) color = "#084202"
+      } else {
+        if (cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) color = "#af4202"
+        if (selectedVehicle?.sideNum === vehicle.sideNum) color = "#084202"
+      }
+
+      console.log(color)
 
       const el = document.createElement("div")
       el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 10;`
 
       el.innerHTML = `
-        <svg width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
+        <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
           <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
         </svg>
         <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
@@ -174,8 +190,18 @@ export default function App() {
         const existingDest = existingEl.querySelector("#dest")
         const existingLineNum = existingEl.querySelector("#lineNum")
         const existingDelayCont = existingEl.querySelector("#delayCont")
+        const existingSvg = existingEl.querySelector("#svg")
+        
+        if(existingSvg) {
+          const path = existingSvg.querySelector("path")
+          if (path) path.style.fill = color
+        }
 
-        if(existingDest) existingDest.textContent = vehicle.dest ? vehicle.dest : vehicle.nextDest
+        if(existingDest) {
+          //@ts-ignore
+          existingDest.style.background = color
+          existingDest.textContent = vehicle.dest ? vehicle.dest : vehicle.nextDest
+        }
         if(existingLineNum) existingLineNum.textContent = vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum
         if(existingDelayCont) existingDelayCont.innerHTML = `
           ${vehicle.timeToDep === 0 ? `
@@ -202,12 +228,18 @@ export default function App() {
           e.stopPropagation()
           setSelectedVehicle(vehicle)
           getRoute(vehicle)
+
+          map.current?.easeTo({
+            center: [vehicle.lng, vehicle.lat],
+            offset: [-30, -150],
+            duration: 300,
+          })
         })
 
         markersRef.current.set(vehicle.vehId, marker)
       }
     })
-  }, [vehicles])
+  }, [vehicles, selectedVehicle])
 
   // FUNCTIONS
   async function fetchLiveVehiclesList() {
@@ -335,29 +367,6 @@ export default function App() {
         {isDark ? "light" : "dark"}
       </button>
       <span className="absolute top-0 z-10 bg-red-700 text-white m-3 ml-20 px-2 py-1 rounded" ref={countdownRef} />
-
-      {selectedVehicle && (
-        <div className="absolute bottom-4 left-4 z-10 bg-white dark:bg-neutral-800 rounded-xl shadow-lg p-4 min-w-56 max-w-xs">
-          <button className="absolute top-2 right-3 text-gray-400 hover:text-gray-600" onClick={() => setSelectedVehicle(null)}>✕</button>
-          <div className="font-bold text-lg mb-1">{selectedVehicle.vehType === "A" ? "🚌" : "🚋"} Linia {selectedVehicle.lineNum}</div>
-          <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <div>Kierunek: <span className="font-medium">{selectedVehicle.dest}</span></div>
-            <div>Boczny nr: {selectedVehicle.sideNum}</div>
-            <div>
-              Opóźnienie:{" "}
-              <span className={selectedVehicle.delay > 0 ? "text-red-500" : selectedVehicle.delay < 0 ? "text-green-500" : "text-gray-500"}>
-                {selectedVehicle.delay > 0 ? `+${selectedVehicle.delay} min` : selectedVehicle.delay < 0 ? `${selectedVehicle.delay} min` : "punktualnie"}
-              </span>
-            </div>
-            <div>Trasa: {selectedVehicle.routeVar}</div>
-            {selectedVehicle.nextLineNum && (
-              <div className="mt-2 pt-2 border-t border-gray-200 dark:border-neutral-700 text-xs text-gray-500">
-                Następna: linia {selectedVehicle.nextLineNum} → {selectedVehicle.nextDest}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       <div ref={mapContainer} className="w-full h-dvh" />
     </div>

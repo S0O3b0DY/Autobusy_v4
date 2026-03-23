@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react'
-import { useMenuStore } from "../lib/store"
+import { useAppStore } from "../lib/store"
 import gsap from "gsap"
 
 import Filter from './Filter'
@@ -8,7 +8,7 @@ import Route from './Route'
 import Vehicle from './Vehicle'
 
 export default function Menu() {
-  const { menuState } = useMenuStore()
+  const { menuState } = useAppStore()
   const ref = useRef<HTMLDivElement>(null)
   const prevState = useRef<number>(menuState)
 
