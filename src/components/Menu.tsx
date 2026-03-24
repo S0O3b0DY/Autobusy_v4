@@ -4,8 +4,9 @@ import gsap from "gsap"
 
 import Filter from './Filter'
 import Search from './Search'
-import Route from './Route'
+import BusStop from './BusStop'
 import Vehicle from './Vehicle'
+
 
 export default function Menu() {
   const { menuState } = useAppStore()
@@ -14,6 +15,8 @@ export default function Menu() {
 
   useEffect(() => {
     if (!ref.current) return
+
+    console.log(menuState)
 
     const el = ref.current
     const isSwichingRight = menuState > prevState.current ? 1 : 0
@@ -36,7 +39,7 @@ export default function Menu() {
   const content: Record<number, React.ReactNode> = {
     1: <Filter />,
     2: <Search />,
-    3: <Route />,
+    3: <BusStop />,
     4: <Vehicle />,
   }
 

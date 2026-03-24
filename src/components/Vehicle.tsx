@@ -1,112 +1,216 @@
-import { 
-  X, 
-  RefreshCw, 
-  NavigationNorth, 
-  ChevronRight, 
-} from "@boxicons/react"
+import { X, RefreshCw, NavigationNorth, ChevronRight, Circle } from "@boxicons/react"
 import { useAppStore } from "../lib/store"
+import clsx from "clsx"
+import { useState, useEffect, useCallback } from "react"
+import type { VehicleTimetable } from './../types/index.d.ts'
+import busStops from './../lib/stops.ts'
+
+const addTime = (hours = 0, minutes = 0, seconds = 0) => {
+  const date = new Date()
+  date.setHours(date.getHours() + hours)
+  date.setMinutes(date.getMinutes() + minutes)
+  date.setSeconds(date.getSeconds() + seconds)
+  return date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
+}
+
+interface Coords {
+  lat: number
+  lng: number
+}
+
+const getBearing = (prev: Coords, current: Coords): number => {
+  // Konwersja na radiany
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const toDeg = (rad: number) => (rad * 180) / Math.PI
+
+  const lat1 = toRad(prev.lat)
+  const lat2 = toRad(current.lat)
+  const dLng = toRad(current.lng - prev.lng)
+
+  const y = Math.sin(dLng) * Math.cos(lat2)
+  const x =
+    Math.cos(lat1) * Math.sin(lat2) -
+    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)
+
+  let bearing = toDeg(Math.atan2(y, x))
+
+  // Normalizacja do zakresu 0-360°
+  return (bearing + 360) % 360
+}
 
 export default function Vehicle() {
-  const { selectedVehicle, setSelectedVehicle, setMenuState } = useAppStore()
+  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, setRouteBusStops, setRoutePolyline } = useAppStore()
 
-  // Dane statyczne 
-  const stops = [
-    { id: 2, name: "Dąbrowskiego-Kossaka", time: "< 1min", status: "now" }, // 'now' = live
-    { id: 3, name: "Tatrzańska-Rydla", time: "2 min", status: "upcoming" },
-    { id: 4, name: "Tatrzańska-Broniewskiego", time: "3 min", status: "upcoming" },
-    { id: 5, name: "Felińskiego-Konspiracyjnego WP", time: "4 min", status: "upcoming" },
-    { id: 6, name: "Śląska-Konspiracyjnego WP", time: "5 min", status: "upcoming" },
-    { id: 7, name: "Śląska-Szymańskiego NŻ", time: "6 min", status: "upcoming" },
-  ]
+  const [timeLeft, setTimeLeft] = useState(30)
+  //@ts-ignore
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [stops, setStops] = useState<VehicleTimetable | null>(null)
+  const [follow, setFollow] = useState<boolean>(false)
+
+  const fetchData = useCallback(async () => {
+    if (!selectedVehicle) return
+    setIsRefreshing(true)
+
+    try {
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/vehicles/${selectedVehicle?.sideNum}/next-stops`)
+      const data = await res.json()
+      setStops(data)
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }, [selectedVehicle])
+
+  useEffect(() => {
+    setTimeLeft(30)
+    fetchData()
+  }, [selectedVehicle])
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          fetchData()
+          return 30
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [fetchData])
+
+  useEffect(() => {
+    if (!follow) return
+    
+    map?.easeTo({
+      center: [selectedVehicle?.lng || 0, selectedVehicle?.lat || 0],
+      offset: [0, -150],
+      bearing: getBearing({lat: selectedVehicle?.prevLat || 0, lng: selectedVehicle?.prevLng || 0}, {lat: selectedVehicle?.lat || 0, lng: selectedVehicle?.lng || 0}),           // rotacja w stopniach (0 = północ)
+      pitch: 80,
+      zoom: 16,
+      duration: 1000,
+    })
+    
+  }, [follow, selectedVehicle])
+
+
+  function handleManualReset() {
+    setTimeLeft(30)
+    fetchData()
+  }
+
+  function handleSetSelectedBusStop(stopID: number) {
+    busStops.forEach(stop => {
+      if (stop.id === stopID) setSelectedBusStop(stop)
+    })
+  }
+
 
   if (!selectedVehicle) return null
+  
+  const bgColor = "bg-blue-500"
 
   return (
-    <div className="flex flex-col h-full text-gray-900 dark:text-white font-sans w-full pb-4">
-      <div className="px-3 pt-2 pb-3 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center px-2 py-0.5 min-w-9 h-7 rounded-md bg-black dark:bg-white text-white dark:text-black text-[15px] font-black shadow-sm">
-            {selectedVehicle.lineNum ? selectedVehicle.lineNum : selectedVehicle.nextLineNum}
+    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 mb-10">
+      
+      <div className="px-1 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className={`px-2 py-1 rounded-lg ${bgColor} text-white text-[13px] font-heavy font-bold tracking-tighter`}>
+            {selectedVehicle.lineNum || selectedVehicle.nextLineNum}
           </div>
-          <ChevronRight className="text-gray-400 shrink-0" />
-          <h2 className="text-[14px] font-bold max-w-70 tracking-tight uppercase">
-            {selectedVehicle.dest ? selectedVehicle.dest : selectedVehicle.nextDest}
-          </h2>
+          <div className="flex flex-col min-w-0">
+            <h2 className="text-[13px] font-bold leading-none uppercase tracking-tight">
+              {selectedVehicle.dest || selectedVehicle.nextDest}
+            </h2>
+            <span className="text-[10px] text-zinc-500 font-medium">Kierunek docelowy</span>
+          </div>
         </div>
 
-        <div className="flex gap-1.5 items-center">
-          <button className="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 active:scale-90 transition-all text-blue-500">
-            <NavigationNorth />
+        <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-2 bg-zinc-100 dark:bg-zinc-800 p-2 rounded-full active:scale-90 transition-transform" onClick={handleManualReset}>
+            <RefreshCw size="sm" className="animate-spin-slow" />
+            <span className="text-[10px] font-mono font-bold uppercase -ml-1">{timeLeft}s</span>
+          </div>
+          <button className={clsx("p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 active:scale-90 transition-transform", follow && "text-blue-500")}
+            onClick={() => setFollow(prev => !prev)}>
+            <NavigationNorth size={"sm"} />
           </button>
-          
-          <button className="flex items-center gap-1.5 px-2.5 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 active:scale-90 transition-all">
-            <RefreshCw className="text-gray-500" />
-            <span className="text-[11px] font-mono font-bold text-gray-500 mt-0.5">7s</span>
-          </button>
-          
           <button 
-            onClick={() => {setSelectedVehicle(null); setMenuState(0)}}
-            className="flex items-center justify-center w-8 h-8 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 active:scale-90 transition-all text-gray-500"
+            onClick={() => {setSelectedVehicle(null); setMenuState(0); setRoutePolyline([]); setRouteBusStops([])}}
+            className="p-2 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 active:scale-90 transition-transform active:text-red-500"
           >
-            <X />
+            <X size={"sm"} />
           </button>
         </div>
       </div>
 
-      <div className="px-4 mb-1.5 text-[12px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-        Następne odjazdy
+      <div className="flex-1 overflow-y-auto px-0.5 py-2 space-y-0.5 custom-scrollbar">
+        {stops && stops.dep.map((stop, idx) => {
+          const isLive = stop.timeDepPredMode === 1
+          
+          let depText
+          let textColor = "text-zinc-700 dark:text-zinc-500"
+
+          if (isLive) {
+            depText = "<1min"
+            textColor = "text-red-500"
+          } 
+          else if (stop.timeDepPredMode === 2) {
+            depText = `${stop.minToDep}min (${addTime(stop.hrsToDep, stop.minToDep, stop.secToDep)})`
+            textColor = "text-blue-500 dark:text-blue-200"
+          }
+          else depText = addTime(stop.hrsToDep, stop.minToDep, stop.secToDep)
+
+          return (
+            <div
+              key={stop.busStopID}
+              className={clsx(`group flex items-center gap-3 px-1 py-1.5 rounded-xl transition-all hover:cursor-pointer active:ring
+                active:ring-neutral-400`, isLive ? 'bg-blue-50 dark:bg-blue-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-900/60')}
+              onClick={() => handleSetSelectedBusStop(stop.busStopID)}
+            >
+
+              <div className="relative flex flex-col items-center shrink-0 group">
+                {isLive ? (
+                  <span className="relative flex h-2.5 w-2.5 left-1.5 mr-2.5">
+                    <span className={clsx("animate-ping absolute inline-flex h-full w-full rounded-full opacity-60", bgColor)}></span>
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${bgColor}`}></span>
+                  </span>
+                ) : (
+                  <Circle size={"sm"} className="text-zinc-300 dark:text-zinc-700 fill-current group-hover:text-blue-500 transition-colors" />
+                )}
+                {idx !== stops.dep.length - 1 && (
+                  <div className="absolute top-4.5 w-px h-5.5 bg-zinc-200 dark:bg-zinc-800" />
+                )}
+              </div>
+
+              {/* Stop Name */}
+              <div className="flex-1 min-w-0">
+                <p className={`text-[13px] truncate ${isLive ? 'font-bold tracking-tight' : 'font-medium text-zinc-600 dark:text-zinc-400'}`}>
+                  {stop.busStopName}
+                </p>
+              </div>
+
+              {/* Time */}
+              <div className="flex items-center gap-2">
+                <span className={`text-[12px] font-bold ${textColor}`}>
+                  {depText}
+                </span>
+                <ChevronRight className="text-zinc-300 dark:text-zinc-700" />
+              </div>
+            </div>
+          )
+        })}
       </div>
 
-      {/* 2. TABELA - Floating Cards (Zamiast chamskich rzędów) */}
-      <div className="flex-1 overflow-y-auto px-2 custom-scrollbar">
-        <div className="flex flex-col gap-1">
-          {stops.map((stop) => {
-            const isLive = stop.status === 'now'
-
-            return (
-              <div 
-                key={stop.id}
-                className={`
-                  flex items-center px-3 py-2 rounded-xl transition-all cursor-pointer active:scale-[0.98]
-                  ${isLive 
-                    ? 'bg-[#34C759]/10 border border-[#34C759]/20 shadow-sm' 
-                    : 'hover:bg-black/5 dark:hover:bg-white/5 border border-transparent'}
-                `}
-              >
-                {/* Index & Puls dla Live */}
-                <div className="w-6 flex justify-start items-center relative">
-                  {isLive ? (
-                    <span className="relative flex h-2.5 w-2.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34C759] opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#34C759]"></span>
-                    </span>
-                  ) : (
-                    <span className="text-[12px] font-medium text-gray-400">{stop.id}.</span>
-                  )}
-                </div>
-
-                {/* Nazwa Przystanku */}
-                <span className={`flex-1 text-[14px] truncate pr-2 ${
-                  isLive ? 'font-bold text-[#34C759] dark:text-[#32D74B]' : 'font-medium'
-                }`}>
-                  {stop.name}
-                </span>
-
-                {/* Czas Odjazdu */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`text-[14px] font-bold text-right min-w-[45px] ${
-                    stop.time.includes('<') 
-                      ? 'text-[#FF3B30]' 
-                      : (isLive ? 'text-[#34C759] dark:text-[#32D74B]' : 'text-gray-900 dark:text-white')
-                  }`}>
-                    {stop.time}
-                  </span>
-                  <ChevronRight className={`${isLive ? 'text-[#34C759]/50' : 'text-gray-300 dark:text-gray-600'}`} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      <div className="py-2 border-t border-zinc-200/50 dark:border-zinc-800/50 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/30">
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">
+          Nr.: {selectedVehicle.sideNum}, Trasa: {selectedVehicle.routeId || selectedVehicle.nextRouteId}
+        </span>
+        <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-2 py-0.5 rounded-md border border-zinc-200 dark:border-zinc-800">
+          Łącznie Przystanków: {stops?.dep[stops.dep.length-1].no}
+        </span>
       </div>
     </div>
   )

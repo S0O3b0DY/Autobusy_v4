@@ -9,59 +9,62 @@ import { osmProviders } from '../lib/osmProviders'
 import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
+import ThemeToggle from '../components/ThemeToggle'
+import LoadingScreen from './../components/LoadingScreen.tsx'
+
 import type { Vehicle, RoutePolyline, BusStopData, Route, LiveVehiclesList } from "../types"
 import { useAppStore } from "../lib/store"
+import { divide } from 'firebase/firestore/pipelines'
 
 
-const REFRESH = 60
+const REFRESH = 10
 
 export default function App() {
   const { isDark, toggle } = useTheme()
-  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop } = useAppStore()
+  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap,
+    routePolyline, setRoutePolyline, routeBusStops, setRouteBusStops, setMenuState, vehicles, setVehicles } = useAppStore()
 
   const mapContainer = useRef<HTMLDivElement | null>(null)
-  const map = useRef<MapLibreMap | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
   const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
   const countdownRef = useRef<any>(null)
 
-  const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [liveVehiclesList, setLiveVehiclesList] = useState<LiveVehiclesList>({ buses: [], trams: [] })
-  const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B", "75A", "75B"])
-  const [routePolyline, setRoutePolyline] = useState<RoutePolyline[]>([])
-  const [routeBusStops, setRouteBusStops] = useState<BusStopData[]>([])
+  const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B"])
 
   // load map
   useEffect(() => {
-    if (map.current || !mapContainer.current) return
+    if (map || !mapContainer.current) return
 
-    map.current = new maplibregl.Map({
+    let mapInstance = new maplibregl.Map({
       container: mapContainer.current,
       center: [19.49589069067231, 51.7323631400332],
       zoom: 11,
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty,
     })
-
-    map.current.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch:true }), "top-right")
-
-    map.current.on("click", (e) => {
+    
+    mapInstance.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch:true }), "top-right")
+    
+    mapInstance.on("click", (e) => {
       const { lng, lat } = e.lngLat
-      console.log(`Kliknięto: ${lat.toFixed(5)}, ${lng.toFixed(5)}`)
+      // console.log(`Kliknięto: ${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     })
+    
+    setMap(mapInstance)
 
     return () => {
-      map.current?.remove()
-      map.current = null
+      mapInstance.remove()
+      mapInstance = null
     }
   }, [])
 
   // change dark/light map style
   useEffect(() => {
-    if (!map.current) return
+    if (!map) return
 
-    map.current.once("styledata", () => {
+    map.once("styledata", () => {
       markersRef.current.forEach((marker) => {
-        marker.addTo(map.current!)
+        marker.addTo(map!)
       })
 
       if (routePolyline.length) {
@@ -69,7 +72,7 @@ export default function App() {
       }
     })
 
-    map.current.setStyle(isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty)
+    map.setStyle(isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty)
   }, [isDark])
 
   // fetch vehicles
@@ -106,7 +109,7 @@ export default function App() {
 
   // update or create markers when vehicles change
   useEffect(() => {
-    if (!map.current) return
+    if (!map) return
 
     const currentIds = new Set(vehicles.map(v => v.vehId))
 
@@ -119,13 +122,14 @@ export default function App() {
     })
 
     vehicles.forEach(vehicle => {
+      if(vehicle.sideNum === selectedVehicle?.sideNum) setSelectedVehicle(vehicle)
+
       if (!shownLines.includes(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) return
 
       const isBus = vehicle.vehType === "A"
       let color = isBus ? "#18295e" : "#7e2014"
 
       function cropLine(str: string | undefined): string {
-        console.log(str ? str.replace(/[a-zA-Z]$/, "") : "", vehicle.lineNum)
         return str ? str.replace(/[a-zA-Z]$/, "") : ""
       }
 
@@ -136,40 +140,6 @@ export default function App() {
         if (cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) color = "#af4202"
         if (selectedVehicle?.sideNum === vehicle.sideNum) color = "#084202"
       }
-
-      console.log(color)
-
-      const el = document.createElement("div")
-      el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 10;`
-
-      el.innerHTML = `
-        <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
-          <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
-        </svg>
-        <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
-          transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
-            ${vehicle.dest ? vehicle.dest : vehicle.nextDest}
-        </div>
-        <div style="position: absolute; width:100%; height:42px; bottom:18px; display:flex; flex-direction:column; justify-content: space-between; padding: 4px 6px;">
-          <div style="height:15px; display:flex; justify-content: space-between; align-items: start;">
-            ${isBus ? `<i class='bx bxs-bus' style="font-size: 1.05rem; color: #fff;"></i>` : `<i class='bx bxs-train' style="font-size: 1.2rem; color: #fff;"></i>`}
-            <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px; letter-spacing: -1px" >
-              ${vehicle.sideNum}
-            </p>
-            <p id="lineNum" style="color:#fff; font-size: .95rem; font-weight: 800; letter-spacing: -1px; line-height: 15px" >
-              ${vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum}
-            </p>
-          </div>
-          <div id="delayCont" style="height:15px; display:flex; justify-content: space-between; align-items: center;">
-            ${vehicle.timeToDep === 0 ? `
-                <i class='bx bx-up-arrow-alt' style="color:${vehicle.delay > 0 ? "#0f0" : "#f00"}; font-size:1rem;"></i>
-              ` : `
-                <i class='bx bx-stopwatch' style="font-size:.9rem; color:#fff;"></i>
-              `}
-            <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
-          </div>
-        </div>
-      `
 
       const existingMarker = markersRef.current.get(vehicle.vehId)
 
@@ -213,9 +183,41 @@ export default function App() {
         `
 
       } else {
+        const el = document.createElement("div")
+        el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 10;`
+
+        el.innerHTML = `
+          <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
+            <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
+          </svg>
+          <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
+            transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
+              ${vehicle.dest ? vehicle.dest : vehicle.nextDest}
+          </div>
+          <div style="position: absolute; width:100%; height:42px; bottom:18px; display:flex; flex-direction:column; justify-content: space-between; padding: 4px 6px;">
+            <div style="height:15px; display:flex; justify-content: space-between; align-items: start;">
+              ${isBus ? `<i class='bx bxs-bus' style="font-size: 1.05rem; color: #fff;"></i>` : `<i class='bx bxs-train' style="font-size: 1.2rem; color: #fff;"></i>`}
+              <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px; letter-spacing: -1px" >
+                ${vehicle.sideNum}
+              </p>
+              <p id="lineNum" style="color:#fff; font-size: .95rem; font-weight: 800; letter-spacing: -1px; line-height: 15px" >
+                ${vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum}
+              </p>
+            </div>
+            <div id="delayCont" style="height:15px; display:flex; justify-content: space-between; align-items: center;">
+              ${vehicle.timeToDep === 0 ? `
+                  <i class='bx bx-up-arrow-alt' style="color:${vehicle.delay > 0 ? "#0f0" : "#f00"}; font-size:1rem;"></i>
+                ` : `
+                  <i class='bx bx-stopwatch' style="font-size:.9rem; color:#fff;"></i>
+                `}
+              <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
+            </div>
+          </div>
+        `
+
         const marker = new Marker({ element: el, anchor: "bottom-left" })
           .setLngLat([vehicle.lng, vehicle.lat])
-          .addTo(map.current!)
+          .addTo(map!)
         
         gsap.from(el, {
           scale: .3,
@@ -228,8 +230,9 @@ export default function App() {
           e.stopPropagation()
           setSelectedVehicle(vehicle)
           getRoute(vehicle)
+          setMenuState(4)
 
-          map.current?.easeTo({
+          map?.easeTo({
             center: [vehicle.lng, vehicle.lat],
             offset: [-30, -150],
             duration: 300,
@@ -249,7 +252,7 @@ export default function App() {
   }
 
   async function getRoute(veh: Vehicle) {
-    console.log("gr", veh.routeId)
+    // console.log("gr", veh.routeId)
     const stopsMap = new Map(stops.map(s => [s.id, s]))
     const polyline: RoutePolyline[] = []
     const routeStops: BusStopData[] = []
@@ -290,10 +293,10 @@ export default function App() {
   }
 
   function addRoute(polyline: [number, number][], busStops: BusStopData[]): void {
-    if (map.current?.getLayer("route-line")) map.current?.removeLayer("route-line")
-    if (map.current?.getSource("route"))     map.current?.removeSource("route")
+    if (map?.getLayer("route-line")) map?.removeLayer("route-line")
+    if (map?.getSource("route"))     map?.removeSource("route")
 
-    map.current?.addSource("route", {
+    map?.addSource("route", {
       type: "geojson",
       data: {
         type: "Feature",
@@ -305,7 +308,7 @@ export default function App() {
       },
     })
 
-    map.current?.addLayer({
+    map?.addLayer({
       id: "route-line",
       type: "line",
       source: "route",
@@ -314,7 +317,7 @@ export default function App() {
         "line-cap": "round"
       },
       paint: {
-        "line-color": "#333",
+        "line-color": "#ff5b03",
         "line-width": 4
       }
     })
@@ -328,25 +331,26 @@ export default function App() {
       let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
 
       const el = document.createElement('div')
-      el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size: 0rem; border: 2px solid #666; zIndex: 1;`
+      el.style.cssText = `width:17px; height:17px; border-radius:100%; background:${gradient}; cursor:pointer; font-size: 0rem; border: 2px solid #666; zIndex: 1;`
       el.textContent = '.'
 
       const marker = new Marker({ element: el, anchor: "center"})
         .setLngLat([stop.x, stop.y])
-        .addTo(map.current!)
+        .addTo(map!)
 
       BSMarkersRef.current.set(stop.id, marker)
 
       el.addEventListener("click", (e) => {
         e.stopPropagation()
         setSelectedBusStop(stop)
+        setMenuState(3)
       })
     })
   }
 
   function removeRoute(): void {
-    if (map.current?.getLayer("route-line")) map.current?.removeLayer("route-line")
-    if (map.current?.getSource("route"))     map.current?.removeSource("route")
+    if (map?.getLayer("route-line")) map?.removeLayer("route-line")
+    if (map?.getSource("route"))     map?.removeSource("route")
 
     BSMarkersRef.current.forEach((marker, id) => {
       marker.remove()
@@ -354,19 +358,24 @@ export default function App() {
     })
   }
 
-  console.log(liveVehiclesList)
+  // console.log(liveVehiclesList)
 
   return (
     <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
+      {vehicles.length === 0 && <div className='w-full h-dvh z-1000 absolute flex justify-center items-center'>
+        <LoadingScreen />
+      </div>}
+
       <BottomSheet>
-        <Menu />
+        <Menu mapRef={map} />
       </BottomSheet>
 
-
-      <button className="absolute top-0 z-10 bg-red-700 m-3 px-2 py-1 text-white rounded" onClick={() => toggle(isDark ? "light" : "dark")}>
-        {isDark ? "light" : "dark"}
-      </button>
-      <span className="absolute top-0 z-10 bg-red-700 text-white m-3 ml-20 px-2 py-1 rounded" ref={countdownRef} />
+      <div className='absolute top-4 left-4 z-10 flex flex-row gap-1'>
+        <ThemeToggle isDark={isDark} toggle={toggle} />
+        <div className='bg-white/80 h-9 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
+          rounded-full px-3 flex items-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
+          text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
+      </div>
 
       <div ref={mapContainer} className="w-full h-dvh" />
     </div>

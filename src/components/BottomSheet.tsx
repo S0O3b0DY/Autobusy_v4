@@ -134,16 +134,14 @@ export default function BottomSheet({ children, title }: Props) {
   }, [onDown, onMove, onUp])
 
   useEffect(() => {
-    console.log(menuState)
+    // console.log(menuState)
     if (!sheetRef.current) return
     if (menuState !== 0) setHeight(SNAPS[1], true)
     if (menuState === 0) setHeight(SNAPS[0], true)
   }, [menuState])
 
-  useEffect(() => {
-    if (selectedBusStop !== null) setMenuState(3)
-    if (selectedVehicle !== null) setMenuState(4)
-  }, [selectedBusStop, selectedVehicle])
+  useEffect(() => { if (selectedBusStop !== null && menuState === 3 ) setMenuState(3) }, [selectedBusStop])
+  useEffect(() => { if (selectedVehicle !== null && menuState === 4 ) setMenuState(4) }, [selectedVehicle])
 
   return (
     <div
@@ -182,7 +180,7 @@ export default function BottomSheet({ children, title }: Props) {
         {children}
       </div>
       <div className="absolute bottom-0 flex w-full px-10 justify-center gap-10 h-10 items-center bg-white/90
-        py-6 rounded-t-2xl backdrop-blur-xl dark:bg-neutral-900/0">
+        py-6 rounded-t-2xl backdrop-blur-3xl dark:bg-neutral-900/70">
         <button className="flex flex-col items-center justify-center transition-active active:scale-90" onClick={() => setMenuState(menuState === 1 ? 0 : 1)}>
           <SliderAlt className={clsx("text-[24px]", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
