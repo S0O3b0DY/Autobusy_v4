@@ -21,7 +21,7 @@ export type BusStopDeparture = {
 export interface BusStopTimetable {
   id: number
   serverTime: string
-  departures: BusStopDeparture[]
+  departs: BusStopDeparture[]
 }
 
 

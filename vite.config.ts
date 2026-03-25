@@ -5,4 +5,16 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          if (id.includes("maplibre-gl"))   return "maplibre"
+          if (id.includes("react-dom"))     return "react-dom"
+          if (id.includes("node_modules"))  return "vendor"
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1512
+  }
 })

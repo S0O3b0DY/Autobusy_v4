@@ -35,7 +35,7 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
       {/* Główny przycisk */}
       <button
         onClick={() => setDropDownShown(prev => !prev)}
-        className="group w-32 h-9 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md 
+        className="group w-32 h-9 bg-white dark:bg-zinc-900 backdrop-blur-md 
                    hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 
                    dark:border-zinc-800 rounded-full px-3 flex items-center gap-2 
                    transition-all shadow-sm active:scale-95 z-10"

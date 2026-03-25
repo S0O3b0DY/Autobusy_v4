@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
-import HomePage from './pages/HomePage'
+import { lazy, Suspense } from "react"
+
+const HomePage = lazy(() => import("./pages/HomePage"))
 import PreviewPage from './pages/PreviewPage'
 import NotFoundPage from './pages/NotFoundPage'
 import ErrorPage from './pages/ErrorPage'

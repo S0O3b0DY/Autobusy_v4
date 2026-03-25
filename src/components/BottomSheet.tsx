@@ -174,7 +174,7 @@ export default function BottomSheet({ children, title }: Props) {
       {/* content — normalny scroll, bez blokowania */}
       <div
         ref={contentRef}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 pb-8"
+        className="flex-1 overflow-y-auto overscroll-contain pb-8"
         style={{ opacity: 0, pointerEvents: "none", transition: "opacity 0.2s ease" }}
       >
         {children}

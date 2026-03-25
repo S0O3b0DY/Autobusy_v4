@@ -17,20 +17,23 @@ import { useAppStore } from "../lib/store"
 import { divide } from 'firebase/firestore/pipelines'
 
 
-const REFRESH = 10
+const REFRESH = 60
 
 export default function App() {
   const { isDark, toggle } = useTheme()
   const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap,
-    routePolyline, setRoutePolyline, routeBusStops, setRouteBusStops, setMenuState, vehicles, setVehicles } = useAppStore()
+    routePolyline, setRoutePolyline, routeStops, setRouteBusStops, setMenuState, vehicles, setVehicles } = useAppStore()
 
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
   const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
   const countdownRef = useRef<any>(null)
 
+  const polylineRef = useRef<RoutePolyline[] | null>(null)
+  const routeStopsRef = useRef<BusStopData[] | null>(null)
+
   const [liveVehiclesList, setLiveVehiclesList] = useState<LiveVehiclesList>({ buses: [], trams: [] })
-  const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B"])
+  const [shownLines, setShownLines] = useState<string[]>(["92A", "92B", "82B", "69A", "69B", "72A", "72B", "W"])
 
   // load map
   useEffect(() => {
@@ -40,7 +43,7 @@ export default function App() {
       container: mapContainer.current,
       center: [19.49589069067231, 51.7323631400332],
       zoom: 11,
-      style: isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty,
+      style: isDark ? osmProviders.maptilerDark : osmProviders.maptilerLight,
     })
     
     mapInstance.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch:true }), "top-right")
@@ -68,7 +71,7 @@ export default function App() {
       })
 
       if (routePolyline.length) {
-        addRoute(routePolyline, routeBusStops)
+        addRoute(routePolyline, routeStops)
       }
     })
 
@@ -107,8 +110,9 @@ export default function App() {
     return () => clearInterval(interval)
   }, [])
 
-  // update or create markers when vehicles change
+  // update or create markers when vehicles changes
   useEffect(() => {
+    console.log(selectedVehicle)
     if (!map) return
 
     const currentIds = new Set(vehicles.map(v => v.vehId))
@@ -244,6 +248,11 @@ export default function App() {
     })
   }, [vehicles, selectedVehicle])
 
+  // update displayed route the selectedBusStop changes
+  useEffect(() => {
+    addRoute()
+  }, [selectedBusStop])
+
   // FUNCTIONS
   async function fetchLiveVehiclesList() {
     await fetch("https://v2.szymon-pira.workers.dev/list")
@@ -286,13 +295,15 @@ export default function App() {
       }
     })
 
-    addRoute(polyline, routeStops)
+    polylineRef.current = polyline
+    routeStopsRef.current = routeStops
+    addRoute()
 
     setRouteBusStops(routeStops)
     setRoutePolyline(polyline)
   }
 
-  function addRoute(polyline: [number, number][], busStops: BusStopData[]): void {
+  function addRoute(): void {
     if (map?.getLayer("route-line")) map?.removeLayer("route-line")
     if (map?.getSource("route"))     map?.removeSource("route")
 
@@ -303,7 +314,7 @@ export default function App() {
         properties: {},
         geometry: {
           type: "LineString",
-          coordinates: polyline.map(([lat, lng]) => [lng, lat])
+          coordinates: polylineRef.current.map(([lat, lng]) => [lng, lat])
         },
       },
     })
@@ -327,8 +338,9 @@ export default function App() {
       BSMarkersRef.current.delete(id)
     })
 
-    busStops.forEach(stop => {
+    routeStopsRef.current?.forEach(stop => {
       let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
+      if (stop.id === selectedBusStop?.id) gradient = "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
 
       const el = document.createElement('div')
       el.style.cssText = `width:17px; height:17px; border-radius:100%; background:${gradient}; cursor:pointer; font-size: 0rem; border: 2px solid #666; zIndex: 1;`
@@ -347,6 +359,7 @@ export default function App() {
       })
     })
   }
+
 
   function removeRoute(): void {
     if (map?.getLayer("route-line")) map?.removeLayer("route-line")
@@ -370,7 +383,7 @@ export default function App() {
         <Menu mapRef={map} />
       </BottomSheet>
 
-      <div className='absolute top-4 left-4 z-10 flex flex-row gap-1'>
+      <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
         <div className='bg-white/80 h-9 dark:bg-zinc-900/80 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
           rounded-full px-3 flex items-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
