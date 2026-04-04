@@ -4,7 +4,7 @@ import gsap from 'gsap'
 
 // Rejestrujemy wtyczkę CustomEase
 
-export default function TransportAppLoader({ isLoading }: { isLoading: boolean }) {
+export default function TransportAppLoader() {
   const containerRef = useRef<HTMLDivElement>(null)
   const logoBoxRef = useRef<HTMLDivElement>(null)
   const iconRef = useRef<HTMLDivElement>(null)
@@ -13,45 +13,43 @@ export default function TransportAppLoader({ isLoading }: { isLoading: boolean }
     // Tworzymy ultra-płynną krzywą "sprężyny" (iOS Style)
     // Ta krzywa powoduje szybki start, lekkie wyjście poza cel i miękki powrót.
 
-    if (!isLoading) {
-      const tl = gsap.timeline()
+    const tl = gsap.timeline()
 
-      // ETAP 1: "Wystrzał" pociągu i morphing w pasek
-      tl.to(iconRef.current, {
-        x: -60, // Pociąg odjeżdża w lewo...
-        opacity: 0, // ...i znika
-        scale: 0.7,
-        duration: 0.5,
-        ease: "power3.in" // Przyspiesza przy odjeździe
-      }, 0)
-      .to(logoBoxRef.current, {
-        height: "3px", // Logo spłaszcza się do minimalnej linii
-        width: "100%", // Rozciąga się na pełną szerokość
-        borderRadius: "2px", // Bardziej ostre rogi dla paska
-        backgroundColor: "#3b82f6", // Zmieniamy kolor na niebieski (blue-500)
-        duration: .5,
-        ease: "expo.inOut" // Używamy naszej customowej sprężyny
-      }, 0.1) // Startuje minimalnie później niż odjazd pociągu
-      
-      // ETAP 2: Satysfakcjonujące "wciśnięcie" paska (jak w iOS)
-      .to(logoBoxRef.current, {
-        scaleX: 0, // Zwijamy pasek...
-        transformOrigin: "right center", // ...do prawej strony
-        duration: 0.5,
-        ease: "expo.inOut" // Bardzo gładkie, "drogie" wygaszanie
-      }, "+=0.2") // Czekamy chwilę, żeby zobaczyć pełny pasek
+    // ETAP 1: "Wystrzał" pociągu i morphing w pasek
+    tl.to(iconRef.current, {
+      x: -60, // Pociąg odjeżdża w lewo...
+      opacity: 0, // ...i znika
+      scale: 0.7,
+      duration: 0.5,
+      ease: "power3.in" // Przyspiesza przy odjeździe
+    }, 0)
+    .to(logoBoxRef.current, {
+      height: "3px", // Logo spłaszcza się do minimalnej linii
+      width: "100%", // Rozciąga się na pełną szerokość
+      borderRadius: "2px", // Bardziej ostre rogi dla paska
+      backgroundColor: "#3b82f6", // Zmieniamy kolor na niebieski (blue-500)
+      duration: .5,
+      ease: "expo.inOut" // Używamy naszej customowej sprężyny
+    }, 0.1) // Startuje minimalnie później niż odjazd pociągu
+    
+    // ETAP 2: Satysfakcjonujące "wciśnięcie" paska (jak w iOS)
+    .to(logoBoxRef.current, {
+      scaleX: 0, // Zwijamy pasek...
+      transformOrigin: "right center", // ...do prawej strony
+      duration: 0.5,
+      ease: "expo.inOut" // Bardzo gładkie, "drogie" wygaszanie
+    }, "+=0.2") // Czekamy chwilę, żeby zobaczyć pełny pasek
 
-      // ETAP 3: Reveal aplikacji (Dissolve)
-      .to(containerRef.current, {
-        opacity: 0,
-        duration: 0.5,
-        ease: "power2.out",
-        onComplete: () => {
-          if (containerRef.current) containerRef.current.style.display = 'none';
-        }
-      }, "-=0.4") // Zaczyna znikać pod koniec zwijania paska
-    }
-  }, [isLoading])
+    // ETAP 3: Reveal aplikacji (Dissolve)
+    .to(containerRef.current, {
+      opacity: 0,
+      duration: 0.5,
+      ease: "power2.out",
+      onComplete: () => {
+        if (containerRef.current) containerRef.current.style.display = 'none';
+      }
+    }, "-=0.4") // Zaczyna znikać pod koniec zwijania paska
+  }, [])
 
   return (
     <div 

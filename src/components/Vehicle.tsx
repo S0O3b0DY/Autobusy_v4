@@ -1,7 +1,7 @@
 import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma } from "@boxicons/react"
 import { useAppStore } from "../lib/store"
 import clsx from "clsx"
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import type { VehicleTimetable } from './../types/index.d.ts'
 import busStops from './../lib/stops.ts'
 
@@ -38,7 +38,7 @@ const getBearing = (prev: Coords, current: Coords): number => {
   return (bearing + 360) % 360
 }
 
-export default function Vehicle() {
+export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
   const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, setRouteBusStops, setRoutePolyline } = useAppStore()
 
   const [timeLeft, setTimeLeft] = useState(30)
@@ -46,6 +46,15 @@ export default function Vehicle() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [stops, setStops] = useState<VehicleTimetable | null>(null)
   const [follow, setFollow] = useState<boolean>(false)
+
+  const selectedVehicleIdRef = useRef<number | null>(selectedVehicle?.sideNum)
+
+  useEffect(() => {
+    if (selectedVehicle?.sideNum !== selectedVehicleIdRef.current) {
+      selectedVehicleIdRef.current = selectedVehicle?.sideNum
+      setStops(null)
+    }
+  }, [selectedVehicle])
 
   const fetchData = useCallback(async () => {
     if (!selectedVehicle) return
@@ -115,13 +124,22 @@ export default function Vehicle() {
     })
   }
 
+  function removeRoute(resetRef = true): void {
+    if (map?.getLayer("route-line")) map.removeLayer("route-line")
+    if (map?.getSource("route"))     map.removeSource("route")
+
+    BSMarkersRef.current.forEach((marker: any) => marker.remove())
+    BSMarkersRef.current.clear()
+
+    if (resetRef) currentRouteIdRef.current = null
+  }
 
   if (!selectedVehicle) return null
   
   const bgColor = "bg-blue-500"
 
   return (
-    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
+    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
       
       {/* HEADER */}
       <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50">
@@ -161,7 +179,7 @@ export default function Vehicle() {
           
           {/* Close */}
           <button 
-            onClick={() => {setSelectedVehicle(null); setMenuState(0); setRoutePolyline([]); setRouteBusStops([])}}
+            onClick={() => {setSelectedVehicle(null); setMenuState(0); setRoutePolyline([]); setRouteBusStops([]); removeRoute()}}
             className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm"
           >
             <X size="sm" />
@@ -175,6 +193,8 @@ export default function Vehicle() {
         {/* LEWA STRONA: OŚ CZASU TRASY */}
         <div className="flex-1 flex flex-col min-w-0 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+            {!stops && <p className="text-center mt-2 text-sm text-zinc-500">Ładowanie danych ...</p>}
+
             {stops && stops.dep.map((stop, idx) => {
               const isLive = stop.timeDepPredMode === 1
               
@@ -195,7 +215,7 @@ export default function Vehicle() {
                 <div
                   key={stop.busStopID}
                   className={clsx(
-                    "group flex items-center gap-3 px-2 py-2 rounded-xl transition-all cursor-pointer",
+                    "group flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer hover:ring hover:ring-white/50",
                     isLive ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                   )}
                   onClick={() => {handleSetSelectedBusStop(stop.busStopID)}}
@@ -273,7 +293,6 @@ export default function Vehicle() {
             </div>
           </div>
         </div>
-
       </div>
     </div>
   )

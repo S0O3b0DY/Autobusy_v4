@@ -32,6 +32,10 @@ html {
 * {
   -webkit-overflow-scrolling: touch;
 }
+/* 
+.maplibregl-ctrl-group {
+  background: #f00 !important;
+} */
 
 @layer base {
   :root {
@@ -46,5 +50,13 @@ html {
 
   body {
     @apply bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100;
+  }
+
+  .maplibregl-ctrl-group {
+    @apply dark:bg-zinc-900! mt-4! mr-4! h-9! w-9! flex! items-center! justify-center! rounded-full!
+  }
+
+  .maplibregl-ctrl-icon {
+    @apply dark:bg-[url(/public/compass_icons_dark.svg)]! dark:bg-size-[10px]
   }
 }

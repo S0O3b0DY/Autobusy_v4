@@ -1,7 +1,8 @@
 import { create } from "zustand"
-import type { Vehicle, BusStopData, RoutePolyline } from "../types"
+import type { Vehicle, BusStopData, RoutePolyline, LiveVehiclesList } from "../types"
 import { MapLibreMap } from "maplibre-gl"
 
+export const INIT_SHOWN_LINES = ["92A", "92B", "82B", "69A", "69B", "72A", "72B", "W"]
 
 type MenuState = 0 | 1 | 2 | 3 | 4
 
@@ -22,6 +23,12 @@ interface AppStore {
   setRouteBusStops: (data: BusStopData[]) => void
   vehicles: Vehicle[] | []
   setVehicles: (vehs: Vehicle[]) => void
+  liveVehiclesList: LiveVehiclesList 
+  setLiveVehiclesList: (data: LiveVehiclesList) => void
+  shownLines: string[]
+  setShownLines: (data: string[]) => void
+  query: string
+  setQuery: (text: string) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -40,5 +47,11 @@ export const useAppStore = create<AppStore>((set) => ({
   routeBusStops: [],
   setRouteBusStops: (data: BusStopData[]) => set({ routeBusStops: data }),
   vehicles: [],
-  setVehicles: (vehs: Vehicle[]) => set({ vehicles: vehs })
+  setVehicles: (vehs: Vehicle[]) => set({ vehicles: vehs }),
+  liveVehiclesList: { buses: [], trams: [] },
+  setLiveVehiclesList: (data: LiveVehiclesList) => set({ liveVehiclesList: data }),
+  shownLines: INIT_SHOWN_LINES,
+  setShownLines: (data: string[]) => set({ shownLines: data }),
+  query: "",
+  setQuery: (text: string) => set({ query: text })
 }))

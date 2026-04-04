@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight } from "@boxicons/react"
 import clsx from "clsx"
 import { useAppStore } from "../lib/store"
@@ -7,11 +7,21 @@ import type { BusStopTimetable } from './../types/index.d.ts'
 const REFRESH = 30
 
 export default function BusStop() {
-  const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle } = useAppStore()
+  const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle, shownLines,
+    setShownLines } = useAppStore()
 
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [departures, setDepartures] = useState<BusStopTimetable | null>(null)
+
+  const selectedBusStopIdRef = useRef<number | null>(selectedBusStop?.id)
+
+  useEffect(() => {
+    if (selectedBusStop?.id !== selectedBusStopIdRef.current) {
+      selectedBusStopIdRef.current = selectedBusStop?.id
+      setDepartures(null)
+    }
+  }, [selectedBusStop])
 
   const fetchData = useCallback(async () => {
     if (!selectedBusStop) return
@@ -57,6 +67,10 @@ export default function BusStop() {
   function handleSetSelectedVehicle(routeID: number): void {
     vehicles.forEach((veh) => {
       if (veh.routeId === routeID || veh.nextRouteId === routeID) {
+        if (!shownLines.includes(veh.lineNum ? veh.lineNum : veh.nextLineNum)) {
+          setShownLines([ ...shownLines, veh.lineNum ? veh.lineNum : veh.nextLineNum ])
+        }
+
         setSelectedVehicle(veh)
         map?.easeTo({
           center: [veh.lng, veh.lat],
@@ -111,6 +125,8 @@ export default function BusStop() {
 
           {/* Lista Odjazdów */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
+            {!departures && <p className="text-center mt-2 text-sm text-zinc-500">Ładowanie danych ...</p>}
+            
             {departures?.departs.map((dep) => {
               let isLive = dep.timeDepPredMode === 2 || dep.timeDepPredMode === 1
 

@@ -3,12 +3,12 @@ import { useAppStore } from "../lib/store"
 import gsap from "gsap"
 
 import Filter from './Filter'
-import Search from './Search'
+import StopSearch from './StopSearch'
 import BusStop from './BusStop'
 import Vehicle from './Vehicle'
 
 
-export default function Menu() {
+export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
   const { menuState } = useAppStore()
   const ref = useRef<HTMLDivElement>(null)
   const prevState = useRef<number>(menuState)
@@ -38,9 +38,9 @@ export default function Menu() {
 
   const content: Record<number, React.ReactNode> = {
     1: <Filter />,
-    2: <Search />,
+    2: <StopSearch BSMarkersRef={BSMarkersRef} />,
     3: <BusStop />,
-    4: <Vehicle />,
+    4: <Vehicle BSMarkersRef={BSMarkersRef} currentRouteIdRef={currentRouteIdRef} />,
   }
 
   return (

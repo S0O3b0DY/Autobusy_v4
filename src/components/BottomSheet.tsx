@@ -134,7 +134,6 @@ export default function BottomSheet({ children, title }: Props) {
   }, [onDown, onMove, onUp])
 
   useEffect(() => {
-    // console.log(menuState)
     if (!sheetRef.current) return
     if (menuState !== 0) setHeight(SNAPS[1], true)
     if (menuState === 0) setHeight(SNAPS[0], true)
