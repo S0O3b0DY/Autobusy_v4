@@ -74,7 +74,7 @@ export default function Filter() {
             className={clsx(
               "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-bold rounded-lg transition-all",
               activeTab === 'trams' 
-                ? "bg-white dark:bg-zinc-800 text-orange-500 shadow-sm" 
+                ? "bg-white dark:bg-zinc-800 text-[#ce3723] shadow-sm" 
                 : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
             )}
           >
@@ -128,14 +128,14 @@ export default function Filter() {
                   key={line}
                   onClick={() => toggleLine(line)}
                   className={clsx(
-                    "flex items-center justify-center h-10 rounded-xl text-[14px] font-black tracking-tighter transition-all active:scale-90 border",
+                    "flex items-center justify-center h-10 rounded-xl text-[14px] font-black tracking-tighter transition-colors active:scale-90 border",
                     isSelected 
                       ? isBus 
                         ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20" 
                         : "bg-[#7e2014] border-[#7e2014] text-white shadow-md shadow-orange-500/20"
                       : isBus
                         ? "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-blue-300 dark:hover:border-blue-700 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10"
-                        : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-orange-300 dark:hover:border-orange-700 hover:text-orange-500 hover:bg-orange-50 dark:hover:bg-orange-500/10"
+                        : "bg-zinc-50 dark:bg-zinc-900/40 border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 hover:border-[#7e2014] dark:hover:border-[#7e2014] hover:text-[#ce3723] hover:bg-orange-50 dark:hover:bg-[#7e2014]/10"
                   )}
                 >
                   {line}

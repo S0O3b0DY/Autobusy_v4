@@ -16,10 +16,14 @@ import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
 import { useAppStore } from "../lib/store"
 
 
-const REFRESH = 60
+
+
+const REFRESH = import.meta.env.VITE_REFRESH
 
 export default function App() {
   const { isDark, toggle } = useTheme()
+
+
   const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList,
     setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines } = useAppStore()
 
@@ -32,7 +36,6 @@ export default function App() {
   const routeStopsRef = useRef<BusStopData[] | null>(null)
   const currentRouteIdRef = useRef<number | null>(null)
   const selectedBusStopRef = useRef<BusStopData | null>(selectedBusStop)
-
 
 
   useEffect(() => {
@@ -375,12 +378,14 @@ export default function App() {
       paint: { "line-color": "#ff5b03", "line-width": 4 }
     })
 
-    routeStops.forEach(stop => {
+    routeStops.forEach((stop, index) => {
       let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
       if (stop.id === selectedBusStopRef.current?.id) gradient = "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
+      if (index === 0) gradient = "linear-gradient(180deg,rgba(0, 204, 24, 1) 0%, rgba(0, 176, 0, 1) 100%)"
+      if (index === routeStops.length-1) gradient = "linear-gradient(180deg,rgba(224, 18, 18, 1) 0%, rgba(179, 32, 32, 1) 100%)"
 
       const el = document.createElement('div')
-      el.style.cssText = `width:17px; height:17px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
+      el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
       el.textContent = '.'
 
       const marker = new Marker({ element: el, anchor: "center" })
@@ -399,7 +404,6 @@ export default function App() {
     setRouteBusStops(routeStops)
     setRoutePolyline(polyline)
   }
-
 
   function removeRoute(resetRef = true): void {
     if (map?.getLayer("route-line")) map.removeLayer("route-line")
@@ -423,7 +427,7 @@ export default function App() {
 
       <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
-        <div className='bg-white/80 h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
+        <div className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
           rounded-full flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
           text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
       </div>
