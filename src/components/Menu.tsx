@@ -16,7 +16,7 @@ export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
   useEffect(() => {
     if (!ref.current) return
 
-    console.log(menuState)
+    // console.log(menuState)
 
     const el = ref.current
     const isSwichingRight = menuState > prevState.current ? 1 : 0

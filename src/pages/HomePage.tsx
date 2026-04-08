@@ -94,7 +94,7 @@ export default function App() {
     const fetchData = async () => {
       if (isRunning) return
       isRunning = true
-      await fetch("https://v2.szymon-pira.workers.dev/vehicles")
+      await fetch(import.meta.env.VITE_API_URL_VEHICLES)
         .then(res => res.json())
         .then(data => {
           if (data?.error) throw new Error("Cannot download data", data.error)
@@ -121,7 +121,7 @@ export default function App() {
 
   // update or create markers when vehicles changes
   useEffect(() => {
-    console.log(selectedVehicle)
+    // console.log(selectedVehicle)
     if (!map) return
 
     const currentIds = new Set(vehicles.map(v => v.vehId))
@@ -240,7 +240,7 @@ export default function App() {
         el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 1;`
 
         el.innerHTML = `
-          <div>
+          <div data-ph-capture-attribute-element-name="dir: ${vehicle.dest ? vehicle.dest : vehicle.nextDest}; num: ${vehicle.sideNum}; route: ${vehicle.routeId || vehicle.nextRouteId}; line: ${vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum}" data-ph-capture-attribute-section="map">
             <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
               <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
             </svg>
@@ -315,15 +315,15 @@ export default function App() {
 
   // FUNCTIONS
   async function fetchLiveVehiclesList() {
-    await fetch("https://v2.szymon-pira.workers.dev/list")
+    await fetch(import.meta.env.VITE_API_URL_LINES_LIST)
       .then(res => res.json())
       .then(data => setLiveVehiclesList(data))
   }
 
   async function createRoute(veh: Vehicle) {
-    console.log("selectedBusStopRef: ", selectedBusStopRef)
+    // console.log("selectedBusStopRef: ", selectedBusStopRef)
     const routeId = veh.routeId || veh.nextRouteId
-    console.log(currentRouteIdRef.current === routeId, currentRouteIdRef.current, routeId, veh.routeId, veh.nextRouteId)
+    // console.log(currentRouteIdRef.current === routeId, currentRouteIdRef.current, routeId, veh.routeId, veh.nextRouteId)
     if (currentRouteIdRef.current === routeId) return
 
     currentRouteIdRef.current = routeId
@@ -333,7 +333,7 @@ export default function App() {
     const routeStops: BusStopData[] = []
     const processedStopIds = new Set()
 
-    const routeData: Route = await fetch(`https://v2.szymon-pira.workers.dev/routes/${routeId}`)
+    const routeData: Route = await fetch(import.meta.env.VITE_API_URL_ROUTE+routeId)
       .then(res => res.json())
 
 
@@ -386,7 +386,7 @@ export default function App() {
 
       const el = document.createElement('div')
       el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
-      el.textContent = '.'
+      el.textContent = stop.id+"; "+stop.n
 
       const marker = new Marker({ element: el, anchor: "center" })
         .setLngLat([stop.x, stop.y])
