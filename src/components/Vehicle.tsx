@@ -1,9 +1,13 @@
-import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma } from "@boxicons/react"
+import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma, List, Check, InfoCircle, ListUl } from "@boxicons/react"
 import { useAppStore } from "../lib/store"
 import clsx from "clsx"
 import { useState, useEffect, useCallback, useRef } from "react"
 import type { VehicleTimetable } from './../types/index.d.ts'
 import busStops from './../lib/stops.ts'
+
+import { getDatabase, ref, push, get } from "firebase/database"
+import { app }from './../lib/firebase.ts'
+
 
 const addTime = (hours = 0, minutes = 0, seconds = 0) => {
   const date = new Date()
@@ -39,6 +43,8 @@ const getBearing = (prev: Coords, current: Coords): number => {
 }
 
 export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
+  const db = getDatabase(app)
+
   const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, setRouteBusStops, setRoutePolyline } = useAppStore()
 
   const [timeLeft, setTimeLeft] = useState(30)
@@ -48,8 +54,35 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
   const [follow, setFollow] = useState<boolean>(false)
 
   const selectedVehicleIdRef = useRef<number | null>(selectedVehicle?.sideNum)
+  const selectRef = useRef<HTMLSelectElement>(null)
+
+  const [vehType, setVehType] = useState<string | null>(null) 
+  const [menuVehType, setMenuVehType] = useState<boolean>(false) 
+
+  async function addBus(number: number, type: string) {
+    await push(ref(db, `AUTOBUSY/${number}`), { number, type })
+  }
+
+  async function getBusType(number: number): Promise<string | null> {
+    const snapshot = await get(ref(db, `AUTOBUSY/${number}`))
+    if (snapshot.exists()) {
+      const entries = Object.values(snapshot.val()) as { number: string; type: string }[]
+      // console.log(entries[0].type, number)
+      return entries[0].type
+    }
+    return null
+  }
 
   useEffect(() => {
+    async function fetchType() {
+      const type = await getBusType(selectedVehicle?.sideNum || 0)
+      setVehType(type) // ustawiasz już rozwiązaną wartość
+    }
+    fetchType()
+
+    setTimeLeft(30)
+    fetchData()
+
     if (selectedVehicle?.sideNum !== selectedVehicleIdRef.current) {
       selectedVehicleIdRef.current = selectedVehicle?.sideNum
       setStops(null)
@@ -61,7 +94,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
     setIsRefreshing(true)
 
     try {
-      const res = await fetch(`https://v2.szymon-pira.workers.dev/vehicles/${selectedVehicle?.sideNum}/next-stops`)
+      const res = await fetch(import.meta.env.VITE_API_URL_VEHICLES + "/" + selectedVehicle?.sideNum + "/next-stops")
       const data = await res.json()
       setStops(data)
     } catch (e) {
@@ -69,11 +102,6 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
     } finally {
       setIsRefreshing(false)
     }
-  }, [selectedVehicle])
-
-  useEffect(() => {
-    setTimeLeft(30)
-    fetchData()
   }, [selectedVehicle])
 
   useEffect(() => {
@@ -138,9 +166,87 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
   
   const bgColor = "bg-blue-500"
 
+
+
+  const handleSubmit = () => {
+    console.log(selectRef.current?.value)
+    addBus(selectedVehicle.sideNum, selectRef.current?.value || "")
+    setVehType(selectRef.current?.value || "")
+    setMenuVehType(false)
+  }
+
+  if (menuVehType) return (
+      <div className="w-full absolute left-[50%] translate-x-[-50%] top-2 max-w-sm rounded-2xl shadow-2xl border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden animate-in fade-in zoom-in duration-200">
+        
+        {/* Header z informacją */}
+        <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200/50 dark:border-zinc-800/50">
+          <div className="flex items-center gap-2 mb-1">
+            <InfoCircle size="xs" className="text-blue-500" />
+            <h3 className="text-[14px] font-bold text-zinc-800 dark:text-zinc-100">Ustaw typ pojazdu</h3>
+          </div>
+          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+            Wybierz typ pojazdu, który przyjedzie, by usprawnić aplikację.
+          </p>
+        </div>
+
+        {/* Formularz */}
+        <div className="p-5 space-y-4">
+          <div className="space-y-2">
+            <label className="text-[11px] font-black uppercase tracking-widest text-zinc-400 ml-1">
+              Opcja wyświetlania
+            </label>
+            
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-blue-500 transition-colors">
+                <ListUl size="sm" />
+              </div>
+              
+              <select 
+                ref={selectRef}
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 pl-10 pr-4 text-[14px] font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer text-zinc-700 dark:text-zinc-200"
+                defaultValue=""
+              >
+                <option value="" disabled hidden>Wybierz jedną z opcji...</option>
+                <option value="Krótki - Isuzu">Krótki - Isuzu</option>
+                <option value="Standardowy - Solaris (najnowszy)">Standardowy - Solaris (najnowszy)</option>
+                <option value="Standardowy - Solaris">Standardowy - Solaris</option>
+                <option value="Standardowy - Mercedes">Standardowy - Mercedes</option>
+                <option value="Przegłubowy - Solaris (najnowszy)">Przegłubowy - Solaris (najnowszy)</option>
+                <option value="Przegłubowy - Solaris">Przegłubowy - Solaris</option>
+                <option value="Przegłubowy - Mercedes">Przegłubowy - Mercedes</option>
+              </select>
+
+              {/* Własna strzałka dla selecta */}
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-zinc-400">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Przycisk akcji */}
+          <button
+            onClick={handleSubmit}
+            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.97] transition-all duration-150"
+          >
+            <Check size="sm" />
+            Zastosuj zmiany
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 py-3 bg-zinc-50/50 dark:bg-zinc-900/20 border-t border-zinc-200/50 dark:border-zinc-800/50">
+          <p className="text-[10px] text-center text-zinc-400 font-medium">
+            To ma realny wpływ na działanie aplikacji.
+          </p>
+        </div>
+
+      </div>
+  )
+
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
-      
       {/* HEADER */}
       <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="flex items-center gap-3 min-w-0">
@@ -195,7 +301,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
             {!stops && <p className="text-center mt-2 text-sm text-zinc-500">Ładowanie danych ...</p>}
 
-            {stops && stops.dep.map((stop, idx) => {
+            {stops && stops.dep.map((stop) => {
               const isLive = stop.timeDepPredMode === 1
               
               let depText
@@ -230,8 +336,10 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
                     ) : (
                       <Circle size="sm" className="text-zinc-300 dark:text-zinc-600 fill-current group-hover:text-blue-500 transition-colors" />
                     )}
-                    {idx !== stops.dep.length - 1 && (
-                      <div className="absolute top-5 w-0.5 h-6 bg-zinc-200 dark:bg-zinc-800" />
+                    {isLive ? (
+                      <div className="absolute top-2.5 w-0.5 h-7 bg-zinc-200 dark:bg-zinc-800" />
+                    ) : (
+                      <div className="absolute top-4.5 w-0.5 h-6 bg-zinc-200 dark:bg-zinc-800" />
                     )}
                   </div>
 
@@ -288,6 +396,27 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Łącznie przystanków</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
                   {stops?.dep ? stops.dep[stops.dep.length - 1].no : "Ładowanie..."}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 mb-10">
+              <List size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Typ pojazdu</span>
+                
+                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
+                  {vehType===null ? (
+                    <div className="mt-2">
+
+                      <button
+                        className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95"
+                        onClick={() => setMenuVehType(true)}
+                      >
+                        Ustaw
+                      </button>
+                    </div>
+                  ) : vehType}
                 </span>
               </div>
             </div>

@@ -19,10 +19,10 @@ export default function BottomSheet({ children, title }: Props) {
   const { _width, _height } = useWindowSize()
 
   // Zawsze aktualne snappy — ref czytany wewnątrz callbacków
-  const snapsRef = useRef<number[]>([75, Math.round(_height * 0.45), _height - 40])
+  const snapsRef = useRef<number[]>([75, Math.round(_height / 2), _height - 40])
 
   useEffect(() => {
-    snapsRef.current = [75, Math.round(_height * 0.45), _height - 40]
+    snapsRef.current = [75, Math.round(_height / 2), _height - 40]
   }, [_width, _height])
 
   const { menuState, setMenuState, selectedVehicle, selectedBusStop } = useAppStore()

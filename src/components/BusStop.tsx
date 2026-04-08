@@ -28,7 +28,7 @@ export default function BusStop() {
     setIsRefreshing(true)
 
     try {
-      const res = await fetch(`https://v2.szymon-pira.workers.dev/stops/${selectedBusStop.id}`)
+      const res = await fetch(import.meta.env.VITE_API_URL_BUS_STOP + selectedBusStop.id)
       const data = await res.json()
       setDepartures(data)
     } catch (e) {

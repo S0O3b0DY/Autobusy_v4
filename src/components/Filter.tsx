@@ -7,7 +7,7 @@ import { useState } from "react"
 export default function Filter() {
   const {liveVehiclesList, shownLines, setShownLines, setMenuState} = useAppStore()
 
-  console.log(shownLines)
+  // console.log(shownLines)
   // Lokalny stan tylko dla interfejsu (aktywna zakładka)
   const [activeTab, setActiveTab] = useState<'buses' | 'trams'>('buses')
 
