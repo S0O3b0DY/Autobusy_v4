@@ -1,10 +1,16 @@
+
 import clsx from "clsx"
-import {Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
+import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
 import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useAuth } from "../contexts/AuthContext"
+import { doc, getDoc, setDoc } from "firebase/firestore"
+import { dbF } from '../lib/firebase.ts'
+
 
 
 export default function Filter() {
+  const { userLoggedIn, user } = useAuth()
   const {liveVehiclesList, shownLines, setShownLines, setMenuState} = useAppStore()
 
   // console.log(shownLines)
@@ -37,6 +43,17 @@ export default function Filter() {
   }
 
   const currentList = liveVehiclesList[activeTab]
+
+  useEffect(() => {
+    const save = async () => {
+      const userRef = doc(dbF, "users", user.uid)
+      
+      await setDoc(userRef, { shownLines: shownLines }, { merge: true })
+    }
+    
+    if (!userLoggedIn) return
+    save()
+  }, [shownLines])
 
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
@@ -159,3 +176,4 @@ export default function Filter() {
     </div>
   )
 }
+

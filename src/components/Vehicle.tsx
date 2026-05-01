@@ -1,3 +1,4 @@
+
 import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma, List, Check, InfoCircle, ListUl } from "@boxicons/react"
 import { useAppStore } from "../lib/store"
 import clsx from "clsx"
@@ -405,7 +406,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Typ pojazdu</span>
                 
-                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
+                <span className="text-[13px] font-medium text-white dark:text-zinc-300">
                   {vehType===null ? (
                     <div className="mt-2">
 

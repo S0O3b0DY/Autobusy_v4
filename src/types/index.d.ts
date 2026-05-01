@@ -1,3 +1,4 @@
+
 // ==========================
 // STOPS
 // ==========================
@@ -128,6 +129,41 @@ interface LiveVehiclesList {
   buses: string[],
   trams: string[]
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // export type DirectionType = 'P' | 'T';
 // export type VehicleType = 'T' | 'A'; // T=tram, A=bus

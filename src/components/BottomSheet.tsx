@@ -1,7 +1,9 @@
+
 import { useRef, useEffect, useCallback } from "react"
-import { SliderAlt, Search, GitCommit, Bus } from "@boxicons/react"
+import { SliderAlt, Search, GitCommit, Bus, UserCircle } from "@boxicons/react"
 import clsx from "clsx"
 import { useAppStore } from "../lib/store"
+import { useAuth } from '../contexts/AuthContext.tsx'
 
 import { useWindowSize } from "../hooks/useWindowSize"
 
@@ -17,6 +19,7 @@ interface Props {
 
 export default function BottomSheet({ children, title }: Props) {
   const { _width, _height } = useWindowSize()
+  const { userLoggedIn, user } = useAuth()
 
   // Zawsze aktualne snappy — ref czytany wewnątrz callbacków
   const snapsRef = useRef<number[]>([75, Math.round(_height / 2), _height - 40])
@@ -228,6 +231,13 @@ export default function BottomSheet({ children, title }: Props) {
             Pojazd
           </span>
         </button>}
+
+        <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 5 ? 0 : 5)}>
+          <UserCircle className={clsx("text-[24px]", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
+          <span className={clsx("text-[10px] mt-1 font-medium", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
+            {userLoggedIn ? user.displayName : "Konto"}
+          </span>
+        </button>
 
       </div>
 

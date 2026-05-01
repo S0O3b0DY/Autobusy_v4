@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react'
 import { useAppStore } from "../lib/store"
 import gsap from "gsap"
@@ -6,6 +7,7 @@ import Filter from './Filter'
 import StopSearch from './StopSearch'
 import BusStop from './BusStop'
 import Vehicle from './Vehicle'
+import Profile from './Profile'
 
 
 export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
@@ -41,6 +43,7 @@ export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
     2: <StopSearch BSMarkersRef={BSMarkersRef} />,
     3: <BusStop />,
     4: <Vehicle BSMarkersRef={BSMarkersRef} currentRouteIdRef={currentRouteIdRef} />,
+    5: <Profile />,
   }
 
   return (

@@ -1,3 +1,4 @@
+
 ﻿import type { BusStopData } from './../types/index'
 
 export default [
