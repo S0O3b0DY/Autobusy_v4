@@ -1,0 +1,134 @@
+{
+  "nav": {
+    "filter": "Filtruj",
+    "search": "Szukaj",
+    "stop": "Przystanek",
+    "vehicle": "Pojazd",
+    "account": "Konto"
+  },
+
+  "busStop": {
+    "loading": "Ładowanie danych ...",
+    "table": {
+      "line": "Linia",
+      "direction": "Kierunek",
+      "departure": "Odjazd"
+    },
+    "info": {
+      "title": "Informacje:",
+      "stopId": "ID Przystanku",
+      "zone": "Strefa",
+      "coords": "Współrzędne"
+    },
+    "departure": {
+      "lessThan1min": "<1min"
+    }
+  },
+
+  "filter": {
+    "title": "Filtruj pojazdy na mapie",
+    "tabs": {
+      "buses": "Autobusy",
+      "trams": "Tramwaje"
+    },
+    "labels": {
+      "busLines": "Linie Autobusowe",
+      "tramLines": "Linie Tramwajowe"
+    },
+    "actions": {
+      "selectAll": "Zaznacz wszystko",
+      "clear": "Wyczyść",
+      "reset": "Resetuj"
+    },
+    "footer": {
+      "showing": "Wyświetlasz obecnie",
+      "linesCount": "{{count}} linii",
+      "onMap": "na mapie.",
+      "warning": "UWAGA: Jeżeli którakolwiek z włączonych linii nie wyświetla na mapie pojazdów, oznacza to, że nie ma żadnych aktualnie na tej linii."
+    }
+  },
+
+  "profile": {
+    "stats": {
+      "activeFilters": "Aktywne Filtry",
+      "linesCount": "{{count}} linii",
+      "noLines": "Brak"
+    },
+    "signOut": "Wyloguj się",
+    "login": {
+      "title": "Logowanie",
+      "subtitle": "Zsynchronizuj swoje linie i inne ustawienia.",
+      "continueWithGoogle": "Kontynuuj za pomocą Google",
+      "or": "lub"
+    }
+  },
+
+  "stopSearch": {
+    "placeholder": "Szukaj przystanku (np. Śląska)...",
+    "hints": {
+      "minChars": "Wpisz co najmniej <bold className=\"text-zinc-600 dark:text-zinc-200 font-bold\">3 znaki</bold>, aby rozpocząć wyszukiwanie.",
+      "noResults": "Nie znaleziono przystanku o nazwie \"{{query}}\"."
+    },
+    "footer": {
+      "database": "Baza przystanków: {{count}}"
+    }
+  },
+
+  "vehicle": {
+    "loading": "Ładowanie danych ...",
+    "info": {
+      "title": "Informacje:",
+      "sideNumber": "Numer boczny",
+      "route": "Trasa",
+      "totalStops": "Łącznie przystanków",
+      "vehicleType": "Typ pojazdu",
+      "noData": "Brak danych"
+    },
+    "setType": {
+      "buttonLabel": "Ustaw",
+      "title": "Ustaw typ pojazdu",
+      "description": "Wybierz typ pojazdu, który przyjedzie, by usprawnić aplikację.",
+      "selectLabel": "Opcja wyświetlania",
+      "selectPlaceholder": "Wybierz jedną z opcji...",
+      "apply": "Zastosuj zmiany",
+      "disclaimer": "To ma realny wpływ na działanie aplikacji.",
+      "types": {
+        "short_isuzu": "Krótki - Isuzu",
+        "standard_solaris_new": "Standardowy - Solaris (najnowszy)",
+        "standard_solaris": "Standardowy - Solaris",
+        "standard_mercedes": "Standardowy - Mercedes",
+        "articulated_solaris_new": "Przegłubowy - Solaris (najnowszy)",
+        "articulated_solaris": "Przegłubowy - Solaris",
+        "articulated_mercedes": "Przegłubowy - Mercedes"
+      }
+    },
+    "departure": {
+      "lessThan1min": "<1min"
+    }
+  },
+
+  "error": {
+    "tag": "runtime error",
+    "title": "Coś poszło nie tak",
+    "refresh": "Odśwież stronę",
+    "home": "Strona główna"
+  },
+
+  "notFound": {
+    "tag": "page not found",
+    "title": "Tej strony nie ma",
+    "description": "Wpisany adres nie istnieje lub strona została przeniesiona.",
+    "home": "Wróć na stronę główną"
+  },
+
+  "common": {
+    "refreshTimer": "{{count}}s",
+    "close": "Zamknij"
+  },
+
+  "theme": {
+    "title": "Ustaw motyw",
+    "dark": "Ciemny",
+    "light": "Jasny"
+  }
+}

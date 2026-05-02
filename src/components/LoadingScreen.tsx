@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react'
 import { Train } from "@boxicons/react"
 import gsap from 'gsap'
@@ -42,7 +43,7 @@ export default function TransportAppLoader() {
 
     // ETAP 3: Reveal aplikacji (Dissolve)
     .to(containerRef.current, {
-      opacity: 0,
+      opacity: 1,
       duration: 0.5,
       ease: "power2.out",
       onComplete: () => {
@@ -55,7 +56,7 @@ export default function TransportAppLoader() {
     <div 
       ref={containerRef}
       // Tło z efektem mrożonego szkła (iOS backdrop-blur)
-      className="fixed inset-0 z-[9999] flex items-center justify-center dark:bg-zinc-950/95 backdrop-blur-xl transition-colors"
+      className="fixed inset-0 z-9999 flex items-center justify-center dark:bg-zinc-950/95 backdrop-blur-xl transition-colors"
     >
       {/* Kontener ograniczający szerokość paska postępu na desktopie */}
       <div className="w-full max-w-sm px-8 flex justify-center">
@@ -64,7 +65,7 @@ export default function TransportAppLoader() {
         <div 
           ref={logoBoxRef}
           // Zaczynamy od niebieskiego Squircle (rounded-[22%])
-          className="relative flex items-center justify-center w-[70px] h-[70px] rounded-[22%] overflow-hidden shadow-lg shadow-blue-500/10"
+          className="relative flex items-center justify-center w-17.5 h-17.5 rounded-[22%] overflow-hidden shadow-lg shadow-blue-500/10"
         >
           {/* IKONA POCIĄGU */}
           <div ref={iconRef} className="text-white text-4xl">

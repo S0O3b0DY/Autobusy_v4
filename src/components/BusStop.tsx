@@ -1,14 +1,17 @@
+
 import { useState, useEffect, useCallback, useRef } from "react"
 import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight } from "@boxicons/react"
 import clsx from "clsx"
 import { useAppStore } from "../lib/store"
 import type { BusStopTimetable } from './../types/index.d.ts'
+import { useTranslation } from "react-i18next"
 
 const REFRESH = 30
 
 export default function BusStop() {
   const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle, shownLines,
     setShownLines } = useAppStore()
+  const { t } = useTranslation()
 
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -118,14 +121,14 @@ export default function BusStop() {
           
           {/* Nagłówki Tabeli */}
           <div className="grid grid-cols-[3.5rem_1fr_5rem] gap-2 px-3 py-2 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-widest border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-100/50 dark:bg-zinc-900/30">
-            <span>Linia</span>
-            <span>Kierunek</span>
-            <span className="text-right">Odjazd</span>
+            <span>{t('busStop.table.line')}</span>
+            <span>{t('busStop.table.direction')}</span>
+            <span className="text-right">{t('busStop.table.departure')}</span>
           </div>
 
           {/* Lista Odjazdów */}
           <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
-            {!departures && <p className="text-center mt-2 text-sm text-zinc-500">Ładowanie danych ...</p>}
+            {!departures && <p className="text-center mt-2 text-sm text-zinc-500">{t('busStop.loading')}</p>}
             
             {departures?.departs.map((dep) => {
               let isLive = dep.timeDepPredMode === 2 || dep.timeDepPredMode === 1
@@ -165,7 +168,7 @@ export default function BusStop() {
 
                 {/* Odjazd */}
                 <div className={clsx("text-right text-[12px] font-bold flex justify-end gap-1", isLive ? "text-green-700 dark:text-green-400" : "text-zinc-800 dark:text-zinc-200")}>
-                  {dep.timeDepPredMode === 1 && <span className="text-red-500">{"<"}1min</span>}
+                  {dep.timeDepPredMode === 1 && <span className="text-red-500">{t('busStop.departure.lessThan1min')}</span>}
                   {dep.timeDepPredMode === 2 && <span className="text-green-700 dark:text-green-400">{dep.departTimeFormated}</span>}
                   {dep.timeDepPredMode === 3 && <span className="text-zinc-800 dark:text-zinc-200">{dep.departTimeFormated}</span>}
                   <ChevronRight
@@ -182,14 +185,14 @@ export default function BusStop() {
         {/* PRAWA STRONA (lub dół na mobilce): INFORMACJE */}
         <div className="w-full md:w-56 bg-zinc-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-4 border-t pb-10 md:border-t-0 border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
           <h3 className="text-[14px] font-bold tracking-tight text-zinc-800 dark:text-zinc-100">
-            Informacje:
+            {t('busStop.info.title')}
           </h3>
           
           <div className="flex flex-col gap-3">
             <div className="flex items-start gap-3">
               <Hashtag size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">ID Przystanku</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('busStop.info.stopId')}</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">{selectedBusStop?.id}</span>
               </div>
             </div>
@@ -197,7 +200,7 @@ export default function BusStop() {
             <div className="flex items-start gap-3">
               <City size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Strefa</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('busStop.info.zone')}</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">{selectedBusStop?.z}</span>
               </div>
             </div>
@@ -205,7 +208,7 @@ export default function BusStop() {
             <div className="flex items-start gap-3">
               <Globe size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Współrzędne</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('busStop.info.coords')}</span>
                 <div className="flex flex-row gap-3 text-[12px] font-mono font-medium text-zinc-600 dark:text-zinc-400">
                   <span>{selectedBusStop?.x.toFixed(5)}</span>
                   <span>{selectedBusStop?.y.toFixed(5)}</span>

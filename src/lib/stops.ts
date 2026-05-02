@@ -1,4 +1,5 @@
-﻿import type { BusStopData } from './../types/index'
+
+import type { BusStopData } from './../types'
 
 export default [
   { "id": 1, "n": "Abramowskiego-Sienkiewicza", "y": 51.75424, "x": 19.46545, "z": 1 },

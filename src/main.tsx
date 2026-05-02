@@ -1,9 +1,12 @@
+
 // @ts-nocheck
-import { StrictMode } from 'react'
+import { StrictMode} from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import posthog from 'posthog-js'
+import { AuthProvider } from './contexts/AuthContext.tsx'
+import './i18n/config.ts'
 
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
@@ -12,6 +15,9 @@ posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )
+

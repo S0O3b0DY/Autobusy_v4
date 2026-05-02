@@ -1,0 +1,91 @@
+import { createContext, useContext, useEffect, useState } from "react"
+import { onAuthStateChanged, getRedirectResult, browserPopupRedirectResolver } from "firebase/auth"
+import { auth, dbF } from '../lib/firebase.ts'
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
+import { useAppStore } from "../lib/store"
+
+const AuthContext = createContext<any>(null)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { setShownLines } = useAppStore()
+  const [user, setUser] = useState<any>(null)
+  const [userLoggedIn, setUserLoggedIn] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Funkcja pomocnicza do załadowania danych z Firestore
+    const loadUserData = async (fbUser: any) => {
+      const userRef = doc(dbF, "users", fbUser.uid)
+      const userSnap = await getDoc(userRef)
+      const userData = userSnap.exists() ? userSnap.data() : {}
+
+      if (userData.shownLines) {
+        setShownLines(userData.shownLines)
+      }
+
+      return { ...fbUser, ...userData }
+    }
+
+    const init = async () => {
+      // Najpierw obsłuż redirect ZANIM odpali onAuthStateChanged
+      try {
+        const result = await getRedirectResult(auth, browserPopupRedirectResolver)
+        console.log(result)
+        if (result?.user) {
+          // Użytkownik wrócił z redirect – zapisz/zaktualizuj Firestore
+          const userRef = doc(dbF, "users", result.user.uid)
+          const userSnap = await getDoc(userRef)
+
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid: result.user.uid,
+              displayName: result.user.displayName,
+              email: result.user.email,
+              photoURL: result.user.photoURL,
+              createdAt: serverTimestamp(),
+              lastLogin: serverTimestamp(),
+              shownLines: [],
+            })
+          } else {
+            await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })
+          }
+        }
+      } catch (err) {
+        console.error("getRedirectResult error:", err)
+      }
+
+      // Teraz nasłuchuj stanu – odpali się z poprawnym userem
+      const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+        if (fbUser) {
+          const fullUser = await loadUserData(fbUser)
+          setUser(fullUser)
+          setUserLoggedIn(true)
+        } else {
+          setUser(null)
+          setUserLoggedIn(false)
+        }
+        setLoading(false)
+      })
+
+      return unsubscribe
+    }
+
+    let unsubscribe: (() => void) | undefined
+
+    init().then((unsub) => {
+      unsubscribe = unsub
+    })
+
+    return () => {
+      unsubscribe?.()
+    }
+  }, [])
+
+  return (
+    <AuthContext.Provider value={{ user, userLoggedIn, loading }}>
+      {!loading && children}
+    </AuthContext.Provider>
+  )
+}
+
+export const useAuth = () => useContext(AuthContext)

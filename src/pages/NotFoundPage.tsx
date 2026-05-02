@@ -1,8 +1,12 @@
+
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
+import { useTranslation } from 'react-i18next'
 
 export default function NotFoundPage() {
   const ref = useRef(null)
+  const { t } = useTranslation()
+  
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -25,20 +29,20 @@ export default function NotFoundPage() {
 
       <div className="-mt-8 relative z-10 space-y-3">
         <p data-el className="font-mono text-xs text-sky-500 uppercase tracking-widest">
-          page not found
+          {t('notFound.tag')}
         </p>
         <h1 data-el className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          Tej strony nie ma
+          {t('notFound.title')}
         </h1>
         <p data-el className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs mx-auto">
-          Wpisany adres nie istnieje lub strona została przeniesiona.
+          {t('notFound.description')}
         </p>
         <div data-el className="pt-2">
           <a
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
-            ← Wróć na stronę główną
+            ← {t('notFound.home')}
           </a>
         </div>
       </div>
