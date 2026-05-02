@@ -1,4 +1,3 @@
-
 import { useTheme } from '../hooks/useTheme'
 import { useEffect, useRef } from "react"
 //@ts-ignore
@@ -11,11 +10,12 @@ import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
-import LoadingScreen from './../components/LoadingScreen'
-import ChangeLang from './../components/ChangeLang'
+import LoadingScreen from './../components/LoadingScreen.tsx'
 
 import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
 import { useAppStore } from "../lib/store"
+
+
 
 
 const REFRESH = import.meta.env.VITE_REFRESH
@@ -36,6 +36,7 @@ export default function App() {
   const routeStopsRef = useRef<BusStopData[] | null>(null)
   const currentRouteIdRef = useRef<number | null>(null)
   const selectedBusStopRef = useRef<BusStopData | null>(selectedBusStop)
+
 
   useEffect(() => {
     selectedBusStopRef.current = selectedBusStop
@@ -66,7 +67,7 @@ export default function App() {
     }
   }, [])
 
-  // update map when ther is a change between dark/light app mode
+  // change dark/light map style
   useEffect(() => {
     if (!map) return
 
@@ -75,12 +76,12 @@ export default function App() {
         marker.addTo(map!)
       })
 
-      if (polylineRef.current?.length) {
-        createRoute(selectedVehicle, true)
-      }
+      // if (routePolyline.length) {
+      //   addRoute(routePolyline, routeStops)
+      // }
     })
 
-    map.setStyle(isDark ? osmProviders.maptilerDark : osmProviders.maptilerLight)
+    map.setStyle(isDark ? osmProviders.maptilerDark : osmProviders.OFMLiberty)
   }, [isDark])
 
   // fetch vehicles
@@ -213,18 +214,6 @@ export default function App() {
         const existingSvg = existingEl.querySelector("#svg")
 
         existingEl.style.zIndex = String((selectedVehicle?.sideNum === vehicle.sideNum) ? 10 : 1)
-        existingEl.onclick = (e) => {
-          e.stopPropagation()
-          setSelectedVehicle(vehicle)
-          createRoute(vehicle)
-          setMenuState(4)
-
-          map?.easeTo({
-            center: [vehicle.lng, vehicle.lat],
-            offset: [0, -150],
-            duration: 300,
-          })
-        }
         
         if(existingSvg) {
           const path = existingSvg.querySelector("path")
@@ -293,7 +282,7 @@ export default function App() {
           ease: "power2.inOut"
         })
 
-        el.onclick = (e) => {
+        el.addEventListener("click", (e) => {
           e.stopPropagation()
           setSelectedVehicle(vehicle)
           createRoute(vehicle)
@@ -304,7 +293,7 @@ export default function App() {
             offset: [0, -150],
             duration: 300,
           })
-        }
+        })
 
         markersRef.current.set(vehicle.vehId, marker)
       }
@@ -331,41 +320,39 @@ export default function App() {
       .then(data => setLiveVehiclesList(data))
   }
 
-  async function createRoute(veh: Vehicle | null, onlyMapUpdate: boolean = false) {
-    if (!onlyMapUpdate) {
-      const routeId = veh?.routeId || veh?.nextRouteId || 0
-      // console.log(currentRouteIdRef.current === routeId, currentRouteIdRef.current, routeId, veh.routeId, veh.nextRouteId)
-      if (currentRouteIdRef.current === routeId) return
-  
-      currentRouteIdRef.current = routeId
-  
-      const stopsMap = new Map(stops.map(s => [s.id, s]))
-      const polyline: RoutePolyline[] = []
-      const routeStops: BusStopData[] = []
-      const processedStopIds = new Set()
-  
-      const routeData: Route = await fetch(import.meta.env.VITE_API_URL_ROUTE+routeId)
-        .then(res => res.json())
-  
-  
-      routeData.stops.forEach(segment => {
-        const startStop = stopsMap.get(segment.startStopID)
-        if (!startStop) return
-  
-        polyline.push([startStop.y, startStop.x])
-  
-        if (!processedStopIds.has(segment.startStopID)) {
-          routeStops.push({ id: startStop.id, n: startStop.n, x: startStop.x, y: startStop.y, z: startStop.z })
-          processedStopIds.add(segment.startStopID)
-        }
-  
-        segment.geoPoints?.forEach(pt => polyline.push([pt.y, pt.x]))
-      })
-  
-      polylineRef.current = polyline
-      routeStopsRef.current = routeStops
-    }
+  async function createRoute(veh: Vehicle) {
     // console.log("selectedBusStopRef: ", selectedBusStopRef)
+    const routeId = veh.routeId || veh.nextRouteId
+    // console.log(currentRouteIdRef.current === routeId, currentRouteIdRef.current, routeId, veh.routeId, veh.nextRouteId)
+    if (currentRouteIdRef.current === routeId) return
+
+    currentRouteIdRef.current = routeId
+
+    const stopsMap = new Map(stops.map(s => [s.id, s]))
+    const polyline: RoutePolyline[] = []
+    const routeStops: BusStopData[] = []
+    const processedStopIds = new Set()
+
+    const routeData: Route = await fetch(import.meta.env.VITE_API_URL_ROUTE+routeId)
+      .then(res => res.json())
+
+
+    routeData.stops.forEach(segment => {
+      const startStop = stopsMap.get(segment.startStopID)
+      if (!startStop) return
+
+      polyline.push([startStop.y, startStop.x])
+
+      if (!processedStopIds.has(segment.startStopID)) {
+        routeStops.push({ id: startStop.id, n: startStop.n, x: startStop.x, y: startStop.y, z: startStop.z })
+        processedStopIds.add(segment.startStopID)
+      }
+
+      segment.geoPoints?.forEach(pt => polyline.push([pt.y, pt.x]))
+    })
+
+    polylineRef.current = polyline
+    routeStopsRef.current = routeStops
 
     // Usuń starą warstwę przed dodaniem nowej
     removeRoute(false)
@@ -378,7 +365,7 @@ export default function App() {
         properties: {},
         geometry: {
           type: "LineString",
-          coordinates: polylineRef.current?.map(([lat, lng]) => [lng, lat]) || []
+          coordinates: polyline.map(([lat, lng]) => [lng, lat])
         }
       }
     })
@@ -391,11 +378,11 @@ export default function App() {
       paint: { "line-color": "#ff5b03", "line-width": 4 }
     })
 
-    routeStopsRef.current?.forEach((stop, index) => {
+    routeStops.forEach((stop, index) => {
       let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
       if (stop.id === selectedBusStopRef.current?.id) gradient = "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
       if (index === 0) gradient = "linear-gradient(180deg,rgba(0, 204, 24, 1) 0%, rgba(0, 176, 0, 1) 100%)"
-      if (index === (routeStopsRef.current?.length || 0)-1) gradient = "linear-gradient(180deg,rgba(224, 18, 18, 1) 0%, rgba(179, 32, 32, 1) 100%)"
+      if (index === routeStops.length-1) gradient = "linear-gradient(180deg,rgba(224, 18, 18, 1) 0%, rgba(179, 32, 32, 1) 100%)"
 
       const el = document.createElement('div')
       el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
@@ -414,8 +401,8 @@ export default function App() {
       })
     })
 
-    setRouteBusStops(routeStopsRef.current || [])
-    setRoutePolyline(polylineRef.current || [])
+    setRouteBusStops(routeStops)
+    setRoutePolyline(polyline)
   }
 
   function removeRoute(resetRef = true): void {
@@ -440,7 +427,6 @@ export default function App() {
 
       <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
-        <ChangeLang />
         <div className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
           rounded-full flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
           text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>

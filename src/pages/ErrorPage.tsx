@@ -1,14 +1,10 @@
-
 import { useEffect, useRef } from 'react'
 import { useRouteError, isRouteErrorResponse } from 'react-router-dom'
 import { gsap } from 'gsap'
-import { useTranslation } from 'react-i18next'
 
 export default function ErrorPage() {
   const ref = useRef(null)
   const error = useRouteError()
-
-  const { t } = useTranslation()
 
   const message = isRouteErrorResponse(error)
     ? error.statusText
@@ -40,10 +36,10 @@ export default function ErrorPage() {
 
       <div className="-mt-8 relative z-10 space-y-3">
         <p data-el className="font-mono text-xs text-red-400 uppercase tracking-widest">
-          {t('error.tag')}
+          runtime error
         </p>
         <h1 data-el className="text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-          {t('error.title')}
+          Coś poszło nie tak
         </h1>
 
         <div data-el className="inline-flex items-start gap-2 px-4 py-3 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900 max-w-sm">
@@ -58,13 +54,13 @@ export default function ErrorPage() {
             onClick={() => window.location.reload()}
             className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors"
           >
-            ↺ {t('error.refresh')}
+            ↺ Odśwież stronę
           </button>
           <a
             href="/"
             className="inline-flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-700 dark:hover:bg-zinc-300 transition-colors"
           >
-            ← {t('error.home')}
+            ← Strona główna
           </a>
         </div>
       </div>
