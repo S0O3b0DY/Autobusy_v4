@@ -1,16 +1,14 @@
 
 import { useState, useRef, useEffect } from 'react'
-import { Sun, Moon, ChevronDown, Check } from "@boxicons/react"
+import { Sun, Moon, ChevronDown, Check, Superset } from "@boxicons/react"
 import gsap from 'gsap'
 import { useTranslation } from 'react-i18next'
+import { SUPPORTED_LANGUAGES } from '../const/lang'
 
-interface ThemeToggleProps {
-  isDark: boolean;
-  toggle: (theme: 'light' | 'dark' ) => void;
-}
 
-export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
-  const { t } = useTranslation()
+
+export default function ThemeToggle() {
+  const { t, i18n } = useTranslation()
 
   const [dropdownShown, setDropDownShown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -34,6 +32,10 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
     }
   }, [dropdownShown])
 
+  function changeLanguage(lng: string) {
+    i18n.changeLanguage(lng)
+  }
+
   return (
     <div className="relative font-sans antialiased">
       {/* Główny przycisk */}
@@ -45,11 +47,11 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
                    transition-all shadow-sm active:scale-95 z-10"
       >
         <div className="flex items-center justify-center text-blue-500 dark:text-blue-400">
-          {isDark ? <Moon size="sm" /> : <Sun size="sm" />}
+          <img src={SUPPORTED_LANGUAGES[i18n.language.split("-")[0]].flagUrl} alt={i18n.language.split("-")[0]} className='w-5.5'/>
         </div>
         
         <span className="text-[13px] font-bold tracking-tight text-zinc-700 dark:text-zinc-200">
-          {isDark ? t('theme.dark') : t('theme.light')}
+          {SUPPORTED_LANGUAGES[i18n.language.split("-")[0]].name}
         </span>
 
         <div ref={arrowRef} className="ml-auto text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors">
@@ -69,23 +71,18 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
                        backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 
                        rounded-2xl shadow-2xl p-1.5 z-30 origin-top-left overflow-hidden"
           >
-            <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-3 py-2">
-              {t('theme.title')}
-            </p>
-
             <div className="flex flex-col gap-0.5">
-              <ThemeOption 
-                label={t('theme.light')}
-                icon={<Sun size="sm" />} 
-                active={!isDark} 
-                onClick={() => { toggle("light"); setDropDownShown(false); }} 
-              />
-              <ThemeOption 
-                label={t('theme.dark')}
-                icon={<Moon size="sm" />} 
-                active={isDark} 
-                onClick={() => { toggle("dark"); setDropDownShown(false); }} 
-              />
+              {Object.values(SUPPORTED_LANGUAGES).map(({ name, flagUrl }, index) => {
+                const langCode = Object.keys(SUPPORTED_LANGUAGES)[index]
+
+                return <LangOption 
+                  label={name}
+                  flagUrl={flagUrl}
+                  key={index}
+                  active={langCode === i18n.language} 
+                  onClick={() => { changeLanguage(langCode); setDropDownShown(false); }} 
+                />
+              })}
             </div>
           </div>
         </>
@@ -94,7 +91,7 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
   )
 }
 
-function ThemeOption({ label, icon, active, onClick }: { label: string, icon: any, active: boolean, onClick: () => void }) {
+function LangOption({ label, flagUrl, active, onClick }: { label: string, flagUrl: string, active: boolean, onClick: () => void }) {
   return (
     <button 
       onClick={onClick}
@@ -105,7 +102,7 @@ function ThemeOption({ label, icon, active, onClick }: { label: string, icon: an
           : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'}
       `}
     >
-      <span className={active ? "text-blue-500" : "text-zinc-400"}>{icon}</span>
+      <img src={flagUrl} alt={label} className={active ? "opacity-100 w-4.5" : "opacity-40 w-4.5"} />
       <span className="text-[13px] tracking-tight flex-1 text-left">{label}</span>
       {active && <Check size="xs" className="animate-in zoom-in duration-300" />}
     </button>

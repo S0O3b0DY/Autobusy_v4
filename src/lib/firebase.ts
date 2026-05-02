@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app"
-import { getAuth } from "firebase/auth"
+import { getAuth, browserPopupRedirectResolver, browserLocalPersistence, setPersistence } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
 const firebaseConfig = {
@@ -17,5 +17,7 @@ const app = initializeApp(firebaseConfig)
 
 const dbF = getFirestore(app)
 const auth = getAuth(app)
+auth.settings.appVerificationDisabledForTesting = false
+setPersistence(auth, browserLocalPersistence)
 
-export { app, auth, dbF }
+export { app, auth, dbF, browserPopupRedirectResolver }

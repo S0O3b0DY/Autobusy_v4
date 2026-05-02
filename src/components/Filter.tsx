@@ -4,14 +4,16 @@ import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
 import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, setDoc } from "firebase/firestore"
 import { dbF } from '../lib/firebase.ts'
+import { useTranslation } from "react-i18next"
 
 
 
 export default function Filter() {
   const { userLoggedIn, user } = useAuth()
   const {liveVehiclesList, shownLines, setShownLines, setMenuState} = useAppStore()
+  const { t } = useTranslation()
 
   // console.log(shownLines)
   // Lokalny stan tylko dla interfejsu (aktywna zakładka)
@@ -61,7 +63,7 @@ export default function Filter() {
       {/* HEADER */}
       <div className="px-4 py-3 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200/50 dark:border-zinc-800/50">
         <h2 className="text-[15px] font-bold leading-none tracking-tight">
-          Filtruj pojazdy na mapie
+          {t('filter.title')}
         </h2>
         <button 
           onClick={() => setMenuState(0)}
@@ -84,7 +86,7 @@ export default function Filter() {
             )}
           >
             <Bus size="sm" />
-            Autobusy
+            {t('filter.tabs.buses')}
           </button>
           <button
             onClick={() => setActiveTab('trams')}
@@ -96,7 +98,7 @@ export default function Filter() {
             )}
           >
             <Train size="sm" />
-            Tramwaje
+            {t('filter.tabs.trams')}
           </button>
         </div>
       </div>
@@ -107,28 +109,28 @@ export default function Filter() {
         {/* Actions bar */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20">
           <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-            {activeTab === 'buses' ? 'Linie Autobusowe' : 'Linie Tramwajowe'}
+            {activeTab === 'buses' ? t('filter.labels.busLines') : t('filter.labels.tramLines')}
           </span>
           <div className="flex gap-2">
             <button 
               onClick={selectAllCurrentTab}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
             >
-              <Checks size="xs" /> Zaznacz wszystko
+              <Checks size="xs" /> {t('filter.actions.selectAll')}
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={clearCurrentTab}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors"
             >
-              <Trash size="xs" /> Wyczyść
+              <Trash size="xs" /> {t('filter.actions.clear')}
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={restoreToDefaults}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-green-500 transition-colors"
             >
-              <RotateCw size="xs" /> Resetuj
+              <RotateCw size="xs" /> {t('filter.actions.reset')}
             </button>
           </div>
         </div>
@@ -166,10 +168,12 @@ export default function Filter() {
       {/* FOOTER */}
       <div className="px-4 py-3 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/80 dark:bg-zinc-900/50 shrink-0">
         <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center">
-          Wyświetlasz obecnie <span className="font-bold text-zinc-800 dark:text-zinc-100">{shownLines.length}</span> linii na mapie.
+          {t('filter.footer.showing')}
+          <span className="font-bold text-zinc-800 dark:text-zinc-100"> {t('filter.footer.linesCount', { count: shownLines.length })} </span>
+          {t('filter.footer.onMap')}
         </p>
         <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center mt-3">
-          UWAGA: Jeżeli którakolwiek z włączonych lini nie wyśwetla na mapie pojazdów, oznacza to, że nie ma żadnych aktuwalnie na tej lini.
+          {t('filter.footer.warning')}
         </p>
       </div>
 

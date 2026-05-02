@@ -1,6 +1,6 @@
-import { createUserWithEmailAndPassword, GoogleAuthProvider, signInWithEmailAndPassword,
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword,
   updatePassword, sendPasswordResetEmail, sendEmailVerification,
-  signInWithPopup, signInWithRedirect, getRedirectResult } from "firebase/auth"
+  signInWithPopup, signInWithRedirect, browserPopupRedirectResolver } from "firebase/auth"
 import { auth, dbF } from "./firebase"
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 
@@ -12,10 +12,9 @@ export async function doSignInWithEmailAndPassword({email, password}: {email: st
   return signInWithEmailAndPassword(auth, email, password)
 }
 
-export async function doSignInWithGooglePopup({ shownLines }: { shownLines: string[], _width?: number, _height?: number }) {
-  
-  const provider = new GoogleAuthProvider()
-  provider.setCustomParameters({ prompt: 'select_account' })
+export async function doSignInWithPopup({ shownLines, provider }: { shownLines: string[], _width?: number, _height?: number, provider: any }) {
+
+  // provider.setCustomParameters({ prompt: 'select_account' })
 
   const result = await signInWithPopup(auth, provider)
   const user = result.user
@@ -41,6 +40,13 @@ export async function doSignInWithGooglePopup({ shownLines }: { shownLines: stri
   }
 
   return result
+}
+
+export async function doSignInWithRedirect({ provider }: { provider: any }) {
+
+  // provider.setCustomParameters({ prompt: 'select_account' })
+
+  await signInWithRedirect(auth, provider, browserPopupRedirectResolver)
 }
 
 export async function doSignOut() {

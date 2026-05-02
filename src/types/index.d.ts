@@ -133,6 +133,16 @@ interface LiveVehiclesList {
 
 
 
+type LangsListObj = {
+  name: string
+  flagUrl: string
+}
+
+export type LangsList = {
+  [key: string]: LangsListObj
+}
+
+
 
 
 

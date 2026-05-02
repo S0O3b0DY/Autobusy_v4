@@ -11,11 +11,11 @@ import stops from '../lib/stops'
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
-import LoadingScreen from './../components/LoadingScreen.tsx'
+import LoadingScreen from './../components/LoadingScreen'
+import ChangeLang from './../components/ChangeLang'
 
 import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
 import { useAppStore } from "../lib/store"
-
 
 
 const REFRESH = import.meta.env.VITE_REFRESH
@@ -36,7 +36,6 @@ export default function App() {
   const routeStopsRef = useRef<BusStopData[] | null>(null)
   const currentRouteIdRef = useRef<number | null>(null)
   const selectedBusStopRef = useRef<BusStopData | null>(selectedBusStop)
-
 
   useEffect(() => {
     selectedBusStopRef.current = selectedBusStop
@@ -441,6 +440,7 @@ export default function App() {
 
       <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
+        <ChangeLang />
         <div className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
           rounded-full flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
           text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
