@@ -1,4 +1,3 @@
-
 // ==========================
 // STOPS
 // ==========================
@@ -129,51 +128,6 @@ interface LiveVehiclesList {
   buses: string[],
   trams: string[]
 }
-
-
-
-
-type LangsListObj = {
-  name: string
-  flagUrl: string
-}
-
-export type LangsList = {
-  [key: string]: LangsListObj
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // export type DirectionType = 'P' | 'T';
 // export type VehicleType = 'T' | 'A'; // T=tram, A=bus

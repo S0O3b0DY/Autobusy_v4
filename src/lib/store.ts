@@ -1,11 +1,10 @@
-
 import { create } from "zustand"
 import type { Vehicle, BusStopData, RoutePolyline, LiveVehiclesList } from "../types"
 import { MapLibreMap } from "maplibre-gl"
 
-export const INIT_SHOWN_LINES = ["92A", "92B", "82B", "69A", "69B", "72A", "72B", "75A", "75B"]
+export const INIT_SHOWN_LINES = ["92A", "92B", "82B", "69A", "69B", "72A", "72B", "W"]
 
-type MenuState = 0 | 1 | 2 | 3 | 4 | 5
+type MenuState = 0 | 1 | 2 | 3 | 4
 
 interface AppStore {
   map: MapLibreMap | null

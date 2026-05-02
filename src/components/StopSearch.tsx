@@ -1,4 +1,3 @@
-
 import { useMemo, useRef } from "react"
 import { X, Search, PinAlt, ChevronRight, InfoCircle } from "@boxicons/react"
 // @ts-ignore
@@ -6,11 +5,9 @@ import { Map as MapLibreMap, Marker} from "maplibre-gl"
 import { useAppStore } from "../lib/store.ts"
 import busStops from '../lib/stops.ts'
 import type { BusStopData } from "../types/index"
-import { useTranslation } from "react-i18next"
 
 export default function StopSearch({ BSMarkersRef }: any) {
   const { setSelectedBusStop, setMenuState, query, setQuery, map } = useAppStore()
-  const { t } = useTranslation()
 
   const shownBSMarker = useRef<Marker | null>(null)
   const shownBSData = useRef<BusStopData | null>(null)
@@ -119,7 +116,7 @@ export default function StopSearch({ BSMarkersRef }: any) {
           <input
             type="text"
             className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
-            placeholder={t('stopSearch.placeholder')}
+            placeholder="Szukaj przystanku (np. Śląska)..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
@@ -137,18 +134,19 @@ export default function StopSearch({ BSMarkersRef }: any) {
 
       {/* RESULTS AREA */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-        {query.length < 3 ? (
+        {query.length > 0 && query.length < 3 ? (
           <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
             <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
                 <InfoCircle size="md" className="opacity-50" />
             </div>
-            <p className="text-[13px] font-medium italic" dangerouslySetInnerHTML={{__html: t('stopSearch.hints.minChars')}}>
+            <p className="text-[13px] font-medium italic">
+              Wpisz co najmniej <span className="text-zinc-600 dark:text-zinc-200 font-bold">3 znaki</span>, aby rozpocząć wyszukiwanie.
             </p>
           </div>
         ) : query.length >= 3 && filteredStops.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
             <p className="text-[13px] font-medium">
-              {t('stopSearch.hints.noResults', { query })}
+              Nie znaleziono przystanku o nazwie <span className="text-zinc-600 dark:text-zinc-200 font-bold">"{query}"</span>.
             </p>
           </div>
         ) : (
@@ -186,7 +184,7 @@ export default function StopSearch({ BSMarkersRef }: any) {
       {/* FOOTER */}
       <div className="px-4 py-3 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex justify-between items-center shrink-0">
         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-          {t('stopSearch.footer.database', { count: busStops.length })}
+           Baza przystanków: {busStops.length}
         </span>
       </div>
     </div>

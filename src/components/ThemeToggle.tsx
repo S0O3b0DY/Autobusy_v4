@@ -1,8 +1,6 @@
-
 import { useState, useRef, useEffect } from 'react'
 import { Sun, Moon, ChevronDown, Check } from "@boxicons/react"
 import gsap from 'gsap'
-import { useTranslation } from 'react-i18next'
 
 interface ThemeToggleProps {
   isDark: boolean;
@@ -10,8 +8,6 @@ interface ThemeToggleProps {
 }
 
 export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
-  const { t } = useTranslation()
-
   const [dropdownShown, setDropDownShown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const arrowRef = useRef<HTMLDivElement>(null)
@@ -49,7 +45,7 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
         </div>
         
         <span className="text-[13px] font-bold tracking-tight text-zinc-700 dark:text-zinc-200">
-          {isDark ? t('theme.dark') : t('theme.light')}
+          {isDark ? "Ciemny" : "Jasny"}
         </span>
 
         <div ref={arrowRef} className="ml-auto text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors">
@@ -70,18 +66,18 @@ export default function ThemeToggle({ toggle, isDark }: ThemeToggleProps) {
                        rounded-2xl shadow-2xl p-1.5 z-30 origin-top-left overflow-hidden"
           >
             <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-widest px-3 py-2">
-              {t('theme.title')}
+              Wybierz motyw
             </p>
 
             <div className="flex flex-col gap-0.5">
               <ThemeOption 
-                label={t('theme.light')}
+                label="Jasny" 
                 icon={<Sun size="sm" />} 
                 active={!isDark} 
                 onClick={() => { toggle("light"); setDropDownShown(false); }} 
               />
               <ThemeOption 
-                label={t('theme.dark')}
+                label="Ciemny" 
                 icon={<Moon size="sm" />} 
                 active={isDark} 
                 onClick={() => { toggle("dark"); setDropDownShown(false); }} 

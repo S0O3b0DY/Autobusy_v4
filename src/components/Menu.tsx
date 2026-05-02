@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useAppStore } from "../lib/store"
 import gsap from "gsap"
 
@@ -6,101 +6,46 @@ import Filter from './Filter'
 import StopSearch from './StopSearch'
 import BusStop from './BusStop'
 import Vehicle from './Vehicle'
-import Profile from './Profile'
+
 
 export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
   const { menuState } = useAppStore()
   const ref = useRef<HTMLDivElement>(null)
-  
-  // displayState przechowuje to, co fizycznie jest teraz na ekranie
-  const [displayState, setDisplayState] = useState(menuState)
-  const prevMenuState = useRef<number>(menuState)
+  const prevState = useRef<number>(menuState)
 
-  // KROK 1: Reagujemy na kliknięcie. Najpierw WYJAZD starego elementu.
   useEffect(() => {
-    if (menuState === displayState) return
+    if (!ref.current) return
+
+    // console.log(menuState)
 
     const el = ref.current
-    if (!el) return
+    const isSwichingRight = menuState > prevState.current ? 1 : 0
 
-    // Jeśli startujemy od zera (otwieramy menu), od razu pozwalamy na render
-    if (displayState === 0) {
-      setDisplayState(menuState)
-      return
-    }
-
-    const isGoingRight = menuState > displayState
-    
-    // Zatrzymujemy poprzednią animację, na wypadek gdyby użytkownik klikał za szybko
-    gsap.killTweensOf(el) 
-    
     gsap.to(el, {
-      x: isGoingRight ? -80 : 80, // Przesunięcie w px (bezpieczniejsze niż %)
-      y: 10,
-      opacity: 0, 
-      scale: 0.98, 
-      duration: 0.15, 
-      ease: "power4.in",
+      x: isSwichingRight ? -20 : 20, opacity: 0, scale: 0.97, duration: 0.18, ease: "expo.in",
       onComplete: () => {
-        // DOPIERO gdy zniknie, zmieniamy stan (React podmienia komponenty)
-        setDisplayState(menuState)
+        prevState.current = menuState
+
+        gsap.fromTo(el,
+          { x: isSwichingRight ? 20 : -20, opacity: 0, scale: 0.97 },
+          { x: 0, opacity: 1, scale: 1, duration: 0.35, ease: "expo.out" }
+        )
       }
     })
 
-  }, [menuState, displayState])
-
-  // KROK 2: React wkleił nowy komponent. Odpalamy animację WEJŚCIA.
-  useLayoutEffect(() => {
-    const el = ref.current
-    if (!el) return
-
-    // Jeśli całkowicie zamknęliśmy menu, resetujemy pamięć kierunku
-    if (displayState === 0) {
-      prevMenuState.current = 0
-      return
-    }
-
-    if (displayState !== prevMenuState.current) {
-      const isGoingRight = displayState > prevMenuState.current
-      
-      // Gdy menu się dopiero otwiera z (0), wjeżdżamy delikatnie z dołu. 
-      // W innym przypadku wjeżdżamy z odpowiedniego boku.
-      const startX = prevMenuState.current === 0 ? 0 : (isGoingRight ? 80 : -80)
-      const startY = prevMenuState.current === 0 ? 10 : 0
-      
-      gsap.killTweensOf(el)
-      
-      gsap.fromTo(el,
-        { x: startX, y: startY, opacity: 0, scale: 0.98 },
-        { x: 0, y: 0, opacity: 1, scale: 1, duration: 0.15, ease: "power1.out" }
-      )
-
-      prevMenuState.current = displayState
-    }
-  }, [displayState])
+    prevState.current = menuState
+  }, [menuState])
 
   const content: Record<number, React.ReactNode> = {
     1: <Filter />,
     2: <StopSearch BSMarkersRef={BSMarkersRef} />,
     3: <BusStop />,
     4: <Vehicle BSMarkersRef={BSMarkersRef} currentRouteIdRef={currentRouteIdRef} />,
-    5: <Profile />,
   }
 
   return (
-    // Najbezpieczniejsza opcja dla GSAP: nie usuwamy kontenera przez "return null", 
-    // tylko chowamy go i wyłączamy interakcje. Dzięki temu "ref" zawsze istnieje.
-    <div 
-      className="w-full"
-      style={{ 
-        opacity: displayState === 0 ? 0 : 1, 
-        pointerEvents: displayState === 0 ? 'none' : 'auto',
-        visibility: displayState === 0 ? 'hidden' : 'visible'
-      }}
-    >
-      <div ref={ref} className="w-full will-change-transform">
-        {content[displayState] ?? null}
-      </div>
+    <div ref={ref} style={{ opacity: menuState === 0 ? 0 : 1 }}>
+      {content[menuState] ?? null}
     </div>
   )
 }
