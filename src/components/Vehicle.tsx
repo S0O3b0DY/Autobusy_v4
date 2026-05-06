@@ -1,19 +1,26 @@
 
-import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma, List, Check, InfoCircle, ListUl } from "@boxicons/react"
+import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route,
+  Sigma, List, Check, InfoCircle, ListUl, Star } from "@boxicons/react"
 import { useAppStore } from "../lib/store"
 import clsx from "clsx"
-import { useState, useEffect, useCallback, useRef } from "react"
-import type { VehicleTimetable } from './../types/index.d.ts'
-import busStops from './../lib/stops.ts'
+import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
+import type { BusStopData, VehicleTimetable } from './../types/index.d.ts'
+import busStops from '../const/stops.ts'
 
 import { getDatabase, ref, push, get } from "firebase/database"
 import { app }from './../lib/firebase.ts'
 import { useTranslation } from "react-i18next"
+import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/HomePage"
 
 
 interface Coords {
   lat: number
   lng: number
+}
+
+type Props = {
+  currentRouteIdRef: RefObject<number | null>
+  routeStopsRef: RefObject<BusStopData[] | null>
 }
 
 const addTime = (hours = 0, minutes = 0, seconds = 0) => {
@@ -44,10 +51,11 @@ const getBearing = (prev: Coords, current: Coords): number => {
   return (bearing + 360) % 360
 }
 
-export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
+export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const db = getDatabase(app)
 
-  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, setRouteBusStops, setRoutePolyline } = useAppStore()
+  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop,
+    setRouteBusStops, setRoutePolyline, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
 
   const [timeLeft, setTimeLeft] = useState(30)
@@ -158,11 +166,13 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
   function removeRoute(resetRef = true): void {
     if (map?.getLayer("route-line")) map.removeLayer("route-line")
     if (map?.getSource("route"))     map.removeSource("route")
+    if (map?.getLayer(BUS_STOPS_LAYER))   map.removeLayer(BUS_STOPS_LAYER)
+    if (map?.getSource(BUS_STOPS_SOURCE)) map.removeSource(BUS_STOPS_SOURCE)
 
-    BSMarkersRef.current.forEach((marker: any) => marker.remove())
-    BSMarkersRef.current.clear()
-
-    if (resetRef) currentRouteIdRef.current = null
+    if (resetRef) {
+      currentRouteIdRef.current = null
+      routeStopsRef.current = null
+    }
   }
 
   if (!selectedVehicle) return null
@@ -174,6 +184,14 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
     addBus(selectedVehicle.sideNum, selectRef.current?.value || "")
     setVehType(selectRef.current?.value || "")
     setMenuVehType(false)
+  }
+
+  const addToFavorites = (id: number) => {
+    if (favoriteStops.includes(id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== id))
+    } else {
+      setFavoriteStops([...favoriteStops, id])
+    }
   }
 
   if (menuVehType) return (
@@ -274,7 +292,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
           {/* Follow toggle */}
           <button 
             className={clsx(
-              "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm",
+              "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm cursor-pointer",
               follow 
                 ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400" 
                 : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
@@ -287,7 +305,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
           {/* Close */}
           <button 
             onClick={() => {setSelectedVehicle(null); setMenuState(0); setRoutePolyline([]); setRouteBusStops([]); removeRoute()}}
-            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm"
+            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm cursor-pointer"
           >
             <X size="sm" />
           </button>
@@ -351,6 +369,18 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
                     </p>
                   </div>
 
+                  <button 
+                    onClick={() => { addToFavorites(stop.busStopID) }}
+                    className={clsx(
+                      "transition-all active:scale-95 cursor-pointer rounded-sm",
+                      favoriteStops.includes(stop.busStopID) 
+                        ? "border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400" 
+                        : "border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-400"
+                    )}
+                  >
+                    {favoriteStops.includes(stop.busStopID) ? <Star pack="filled" size="xs"/> : <Star size="xs"/>}
+                  </button>
+                  
                   {/* Time */}
                   <div className="flex items-center gap-1.5">
                     <span className={`text-[12px] font-bold ${textColor}`}>
@@ -358,6 +388,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
                     </span>
                     <ChevronRight size="sm" className="text-zinc-300 dark:text-zinc-700" onClick={() => setMenuState(3)} />
                   </div>
+          
                 </div>
               )
             })}
@@ -410,7 +441,7 @@ export default function Vehicle({ BSMarkersRef, currentRouteIdRef }: any) {
                   {vehType===null ? (
                     <div className="mt-2">
                       <button
-                        className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95"
+                        className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95 cursor-pointer"
                         onClick={() => setMenuVehType(true)}
                       >
                         {t('vehicle.setType.buttonLabel')}

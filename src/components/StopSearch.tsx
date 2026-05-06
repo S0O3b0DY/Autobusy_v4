@@ -1,20 +1,26 @@
 
-import { useMemo, useRef } from "react"
-import { X, Search, PinAlt, ChevronRight, InfoCircle } from "@boxicons/react"
+import { useMemo, type RefObject } from "react"
+import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@boxicons/react"
 // @ts-ignore
-import { Map as MapLibreMap, Marker} from "maplibre-gl"
+import { Map as MapLibreMap, Marker, type GeoJSONSource, GeoJSON } from "maplibre-gl"
 import { useAppStore } from "../lib/store.ts"
-import busStops from '../lib/stops.ts'
+import busStops from '../const/stops.ts'
 import type { BusStopData } from "../types/index"
 import { useTranslation } from "react-i18next"
+import { useAuth } from "../contexts/AuthContext.tsx"
 
-export default function StopSearch({ BSMarkersRef }: any) {
-  const { setSelectedBusStop, setMenuState, query, setQuery, map } = useAppStore()
+const busStopsMap = new Map(busStops.map(item => [item.id, item]))
+export const BUS_STOPS_SEARCH_SOURCE = 'bus-stops-search'
+export const BUS_STOPS_SEARCH_LAYER  = 'bus-stops-search-layer'
+
+type Props = {
+  routeStopsRef: RefObject<BusStopData[] | null>
+}
+
+export default function StopSearch({ routeStopsRef }: Props) {
+  const { setSelectedBusStop, setMenuState, query, setQuery, map, favoriteStops, setFavoriteStops } = useAppStore()
+  const { userLoggedIn } = useAuth()
   const { t } = useTranslation()
-
-  const shownBSMarker = useRef<Marker | null>(null)
-  const shownBSData = useRef<BusStopData | null>(null)
-  const selectedBusStopRef = useRef<BusStopData | null>(null)
 
   // Algorytm wyszukiwania (min. 3 znaki)
   const filteredStops = useMemo(() => {
@@ -68,107 +74,225 @@ export default function StopSearch({ BSMarkersRef }: any) {
       return ti >= token.length - 1
     }
   }, [query])
+  
+  // TODO: dac przystanek na oddzielna warstwe
+  const handleSelect = (stop: BusStopData | undefined) => {
+    if (!stop) return
 
-
-  const handleSelect = (stop: BusStopData) => {
     map?.easeTo({
       center: [stop.x, stop.y],
       offset: [0, -150],
       zoom: 15,
       duration: 600,
     })
+
+    const geojson: GeoJSON = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [stop.x, stop.y] },
+          properties: {
+            id:       stop.id,
+            iconType: "stop-selected",
+            stopJson: JSON.stringify(stop),
+          }
+        },
+      ]
+    }
     
-    if (shownBSData.current?.id !== stop.id) {
-      shownBSData.current = stop
-      selectedBusStopRef.current = stop
-      setSelectedBusStop(stop)
+    if (routeStopsRef.current?.find(st => st.id === stop.id)?.id !== stop.id) {
+      // SOURCE
+      const source = map?.getSource(BUS_STOPS_SEARCH_SOURCE) as GeoJSONSource | undefined
+      if (source) {
+        source.setData(geojson)
+      } else {
+        map?.addSource(BUS_STOPS_SEARCH_SOURCE, { type: 'geojson', data: geojson })
 
-      shownBSMarker.current?.remove()
-      shownBSMarker.current = null
+        if (!map?.getLayer(BUS_STOPS_SEARCH_LAYER)) {
+          map?.addLayer({
+            id:     BUS_STOPS_SEARCH_LAYER,
+            type:   'symbol',
+            source: BUS_STOPS_SEARCH_SOURCE,
+            layout: {
+              'icon-image':             ['get', 'iconType'],
+              'icon-size':              1,
+              'icon-allow-overlap':     true,
+              'icon-ignore-placement':  true,
+            },
+          })
+        }
 
-      let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
-      if (stop.id === selectedBusStopRef.current?.id) gradient = "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
+        ;(map?.getSource(BUS_STOPS_SEARCH_SOURCE) as GeoJSONSource)?.setData(geojson)
+      }
 
-      const el = document.createElement('div')
-      el.style.cssText = `width:17px; height:17px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
-      el.textContent = '.'
 
-      const marker = new Marker({ element: el, anchor: "center" })
-        .setLngLat([stop.x, stop.y])
-        .addTo(map!)
-      shownBSMarker.current = marker
-      BSMarkersRef.current.set(stop.id, marker)
+      // LAYER
+      if (!map?.getLayer(BUS_STOPS_SEARCH_LAYER)) {
+        console.log("dodano layer")
+        map?.addLayer({
+          id:     BUS_STOPS_SEARCH_LAYER,
+          type:   'symbol',
+          source: BUS_STOPS_SEARCH_SOURCE,
+          layout: {
+            'icon-image':             ['get', 'iconType'],
+            'icon-size':              1,
+            'icon-allow-overlap':     true,
+            'icon-ignore-placement':  true,
+          },
+        })
+      }
 
-      el.addEventListener("click", (e) => {
-        e.stopPropagation()
+      map?.on('mouseenter', BUS_STOPS_SEARCH_LAYER, () => {
+        map.getCanvas().style.cursor = 'pointer'
+      })
+      map?.on('mouseleave', BUS_STOPS_SEARCH_LAYER, () => {
+        map.getCanvas().style.cursor = ''
+      })
+  
+      map?.on('click', BUS_STOPS_SEARCH_LAYER, (e) => {
+        e.preventDefault()
+        const feature = e.features?.[0]
+        if (!feature) return
+        const stop: BusStopData = JSON.parse(feature.properties.stopJson)
+        setSelectedBusStop(stop)
         setMenuState(3)
       })
     }
+      
+    setSelectedBusStop(stop)
   }
 
+  const addToFavorites = (id: number) => {
+    if (favoriteStops.includes(id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== id))
+    } else {
+      setFavoriteStops([...favoriteStops, id])
+    }
+  }
 
+  function handleRemoveFromFav(e: any, stopID: number) {
+    e.stopPropagation()
+    addToFavorites(stopID)
+    
+  }
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
       
-      {/* SEARCH INPUT SECTION */}
-      <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30">
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-blue-500 transition-colors">
-            <Search size="sm" />
-          </div>
-          <input
-            type="text"
-            className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
-            placeholder={t('stopSearch.placeholder')}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            autoFocus
-          />
-          {query && (
-            <button 
-              onClick={() => setQuery("")}
-              className="absolute inset-y-0 right-3 flex items-center text-red-500 hover:text-red-400 dark:hover:text-red-400"
-            >
-              <X size="xs" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* RESULTS AREA */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
-        {query.length < 3 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
-            <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
-                <InfoCircle size="md" className="opacity-50" />
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+        {/* LEWA STRONA - WYSZYKIWANIE */}
+        <div className="flex-1 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
+          {/* SEARCH INPUT SECTION */}
+          <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30">
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-blue-500 transition-colors">
+                <Search size="sm" />
+              </div>
+              <input
+                type="text"
+                className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                placeholder={t('stopSearch.placeholder')}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                autoFocus
+              />
+              {query && (
+                <button 
+                  onClick={() => setQuery("")}
+                  className="absolute inset-y-0 right-3 flex items-center text-red-500 hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
+                >
+                  <X size="xs" />
+                </button>
+              )}
             </div>
-            <p className="text-[13px] font-medium italic" dangerouslySetInnerHTML={{__html: t('stopSearch.hints.minChars')}}>
-            </p>
           </div>
-        ) : query.length >= 3 && filteredStops.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
-            <p className="text-[13px] font-medium">
-              {t('stopSearch.hints.noResults', { query })}
-            </p>
+
+          {/* RESULTS AREA */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+
+            {query.length < 3 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+                <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
+                    <InfoCircle size="md" className="opacity-50" />
+                </div>
+                <p className="text-[13px] font-medium italic" dangerouslySetInnerHTML={{__html: t('stopSearch.hints.minChars')}}>
+                </p>
+              </div>
+            ) : query.length >= 3 && filteredStops.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+                <p className="text-[13px] font-medium">
+                  {t('stopSearch.hints.noResults', { query })}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {filteredStops.map((stop) => (
+                  <button
+                    key={stop.id}
+                    onClick={() => handleSelect(stop)}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group text-left active:scale-[0.98] cursor-pointer hover:ring hover:ring-zinc-300 dark:hover:ring-zinc-800"
+                  >
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
+                      <PinAlt size="sm" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-[14px] font-bold text-zinc-700 dark:text-zinc-200 truncate leading-tight">
+                        {stop.n}
+                      </h4>
+                      <p className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight">
+                        ID: {stop.id}
+                      </p>
+                    </div>
+
+                    <ChevronRight
+                      size="sm"
+                      className="text-zinc-300 dark:text-zinc-700 group-hover:text-zinc-500 transition-colors"
+                      onClick={() => setMenuState(3)}
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="space-y-0.5">
-            {filteredStops.map((stop) => (
+        </div>
+        <div className="w-full md:w-[50%] bg-zinc-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-4 border-t md:border-t-0 border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
+          {/* HEADER */}
+          <div className="flex flex-row items-center">
+            <h3 className="flex-1 text-[15px] font-bold leading-none tracking-tight">
+              Zapisane Przystanki
+            </h3>
+            {favoriteStops.length > 0 && <button
+              onClick={() => setFavoriteStops([])}
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors cursor-pointer"
+            >
+              <Trash size="sm"/>
+            </button>}
+          </div>
+
+          {/* LIST */}
+          {userLoggedIn ? <div>
+            {favoriteStops.length > 0 ? favoriteStops.map((favStop, i) => (
               <button
-                key={stop.id}
-                onClick={() => handleSelect(stop)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-all group text-left active:scale-[0.98]"
+                key={i}
+                onClick={() => handleSelect(busStopsMap.get(favStop))}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group text-left active:scale-[0.98] cursor-pointer hover:ring hover:ring-zinc-300 dark:hover:ring-zinc-800"
               >
-                <div className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
-                  <PinAlt size="sm" />
+                <div
+                  className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors flex items-center justify-center flex-col cursor-pointer"
+                  onClick={(e) => handleRemoveFromFav(e, favStop)}
+                  role="button"
+                >
+                  <Eraser size="sm" />
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight group-hover:text-blue-500 transition-colors">USUŃ</span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[14px] font-bold text-zinc-700 dark:text-zinc-200 truncate leading-tight">
-                    {stop.n}
+                    {busStopsMap.get(favStop)?.n}
                   </h4>
                   <p className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight">
-                    ID: {stop.id}
+                    ID: {favStop}
                   </p>
                 </div>
 
@@ -178,10 +302,17 @@ export default function StopSearch({ BSMarkersRef }: any) {
                   onClick={() => setMenuState(3)}
                 />
               </button>
-            ))}
-          </div>
-        )}
+            )) : <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+                <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
+                    <InfoCircle size="md" className="opacity-50" />
+                </div>
+                <p className="text-[13px] font-medium italic">Brak zapisanych przystanków.</p>
+              </div>}
+          </div> : <p className="text-[13px] text-zinc-500 text-center dark:text-zinc-400">Tylko zalogowani użytkownicy mogą mieć dostęp do zapisanych przystanków.</p>}
+        </div>
       </div>
+      
+      
 
       {/* FOOTER */}
       <div className="px-4 py-3 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex justify-between items-center shrink-0">

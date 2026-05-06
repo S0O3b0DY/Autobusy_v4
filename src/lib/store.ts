@@ -30,6 +30,8 @@ interface AppStore {
   setShownLines: (data: string[]) => void
   query: string
   setQuery: (text: string) => void
+  favoriteStops: number[]
+  setFavoriteStops: (data: number[]) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -54,5 +56,7 @@ export const useAppStore = create<AppStore>((set) => ({
   shownLines: INIT_SHOWN_LINES,
   setShownLines: (data: string[]) => set({ shownLines: data }),
   query: "",
-  setQuery: (text: string) => set({ query: text })
+  setQuery: (text: string) => set({ query: text }),
+  favoriteStops: [],
+  setFavoriteStops: (data: number[]) => set({ favoriteStops: data }),
 }))

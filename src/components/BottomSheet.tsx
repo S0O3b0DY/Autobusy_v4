@@ -24,10 +24,10 @@ export default function BottomSheet({ children, title }: Props) {
   const { t } = useTranslation()
 
   // Zawsze aktualne snappy — ref czytany wewnątrz callbacków
-  const snapsRef = useRef<number[]>([75, Math.round(_height / 2), _height - 40])
+  const snapsRef = useRef<number[]>([75, Math.round(_height / 2), _height - 50])
 
   useEffect(() => {
-    snapsRef.current = [75, Math.round(_height / 2), _height - 40]
+    snapsRef.current = [75, Math.round(_height / 2), _height - 60]
   }, [_width, _height])
 
   const { menuState, setMenuState, selectedVehicle, selectedBusStop } = useAppStore()
@@ -202,47 +202,58 @@ export default function BottomSheet({ children, title }: Props) {
         {children}
       </div>
 
-      <div className="absolute bottom-0 flex w-full px-10 justify-center gap-10 h-10 items-center bg-white/90
-        py-6 rounded-t-2xl backdrop-blur-3xl dark:bg-neutral-900/70">
-        <div className="absolute right-2 bottom-0.5 text-xs opacity-15">{__APP_VERSION__}; {__BUILD_DATE__}</div>
-
-        <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 1 ? 0 : 1)}>
+      <div className="absolute bottom-0 flex w-full px-10 justify-center gap-4 h-10 items-center bg-white/90
+        py-6 rounded-t-2xl backdrop-blur-3xl dark:bg-neutral-900/70 border-t border-t-zinc-300 dark:border-t-zinc-600">
+        <button
+          className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 transition-all hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
+          onClick={() => setMenuState(menuState === 1 ? 0 : 1)}
+        >
           <SliderAlt className={clsx("text-[24px]", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {t('nav.filter')}
           </span>
         </button>
 
-        <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 2 ? 0 : 2)}>
+        <button
+          className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
+          onClick={() => setMenuState(menuState === 2 ? 0 : 2)}
+        >
           <Search className={clsx("text-[24px]", menuState === 2 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 2 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {t('nav.search')}
           </span>
         </button>
 
-        {selectedBusStop && <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 3 ? 0 : 3)}>
+        {selectedBusStop && <button
+          className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
+          onClick={() => setMenuState(menuState === 3 ? 0 : 3)}
+        >
           <GitCommit className={clsx("text-[24px]", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {t('nav.stop')}
           </span>
         </button>}
 
-        {selectedVehicle && <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 4 ? 0 : 4)}>
+        {selectedVehicle && <button
+          className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
+          onClick={() => setMenuState(menuState === 4 ? 0 : 4)}
+        >
           <Bus className={clsx("text-[24px]", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {t('nav.vehicle')}
           </span>
         </button>}
 
-        <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 5 ? 0 : 5)}>
+        <button
+          className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
+          onClick={() => setMenuState(menuState === 5 ? 0 : 5)}
+        >
           <UserCircle className={clsx("text-[24px]", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {userLoggedIn ? user.displayName : t('nav.account')}
           </span>
         </button>
-
       </div>
-
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { useAppStore } from "../lib/store"
 import gsap from "gsap"
 
@@ -7,8 +7,14 @@ import StopSearch from './StopSearch'
 import BusStop from './BusStop'
 import Vehicle from './Vehicle'
 import Profile from './Profile'
+import type { BusStopData } from '../types'
 
-export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
+type Props = {
+  currentRouteIdRef: RefObject<number | null>,
+  routeStopsRef: RefObject<BusStopData[] | null>
+}
+
+export default function Menu({ currentRouteIdRef, routeStopsRef }: Props) {
   const { menuState } = useAppStore()
   const ref = useRef<HTMLDivElement>(null)
   
@@ -81,9 +87,9 @@ export default function Menu({ BSMarkersRef, currentRouteIdRef }: any) {
 
   const content: Record<number, React.ReactNode> = {
     1: <Filter />,
-    2: <StopSearch BSMarkersRef={BSMarkersRef} />,
-    3: <BusStop />,
-    4: <Vehicle BSMarkersRef={BSMarkersRef} currentRouteIdRef={currentRouteIdRef} />,
+    2: <StopSearch routeStopsRef={routeStopsRef} />,
+    3: <BusStop routeStopsRef={routeStopsRef} />,
+    4: <Vehicle currentRouteIdRef={currentRouteIdRef} routeStopsRef={routeStopsRef} />,
     5: <Profile />,
   }
 

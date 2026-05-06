@@ -7,7 +7,7 @@ import { useAppStore } from "../lib/store"
 const AuthContext = createContext<any>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setShownLines } = useAppStore()
+  const { setShownLines, shownLines, favoriteStops, setFavoriteStops } = useAppStore()
   const [user, setUser] = useState<any>(null)
   const [userLoggedIn, setUserLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -19,9 +19,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userSnap = await getDoc(userRef)
       const userData = userSnap.exists() ? userSnap.data() : {}
 
-      if (userData.shownLines) {
-        setShownLines(userData.shownLines)
-      }
+      userData.shownLines && setShownLines(userData.shownLines)
+      userData.favoriteStops && setFavoriteStops(userData.favoriteStops)
 
       return { ...fbUser, ...userData }
     }
@@ -44,7 +43,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               photoURL: result.user.photoURL,
               createdAt: serverTimestamp(),
               lastLogin: serverTimestamp(),
-              shownLines: [],
+              shownLines: shownLines,
+              favoriteStops: favoriteStops
             })
           } else {
             await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })

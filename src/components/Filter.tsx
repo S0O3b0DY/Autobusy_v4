@@ -9,7 +9,6 @@ import { dbF } from '../lib/firebase.ts'
 import { useTranslation } from "react-i18next"
 
 
-
 export default function Filter() {
   const { userLoggedIn, user } = useAuth()
   const {liveVehiclesList, shownLines, setShownLines, setMenuState} = useAppStore()
@@ -67,7 +66,7 @@ export default function Filter() {
         </h2>
         <button 
           onClick={() => setMenuState(0)}
-          className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm shrink-0"
+          className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
         >
           <X size="sm" />
         </button>
@@ -79,7 +78,7 @@ export default function Filter() {
           <button
             onClick={() => setActiveTab('buses')}
             className={clsx(
-              "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-bold rounded-lg transition-all",
+              "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-bold rounded-lg transition-all cursor-pointer",
               activeTab === 'buses' 
                 ? "bg-white dark:bg-zinc-800 text-blue-500 shadow-sm" 
                 : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -91,7 +90,7 @@ export default function Filter() {
           <button
             onClick={() => setActiveTab('trams')}
             className={clsx(
-              "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-bold rounded-lg transition-all",
+              "flex-1 flex items-center justify-center gap-2 py-2 text-[13px] font-bold rounded-lg transition-all cursor-pointer",
               activeTab === 'trams' 
                 ? "bg-white dark:bg-zinc-800 text-[#ce3723] shadow-sm" 
                 : "text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-300"
@@ -114,21 +113,21 @@ export default function Filter() {
           <div className="flex gap-2">
             <button 
               onClick={selectAllCurrentTab}
-              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
             >
               <Checks size="xs" /> {t('filter.actions.selectAll')}
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={clearCurrentTab}
-              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors cursor-pointer"
             >
               <Trash size="xs" /> {t('filter.actions.clear')}
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={restoreToDefaults}
-              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-green-500 transition-colors"
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-green-500 transition-colors cursor-pointer"
             >
               <RotateCw size="xs" /> {t('filter.actions.reset')}
             </button>
@@ -147,7 +146,7 @@ export default function Filter() {
                   key={line}
                   onClick={() => toggleLine(line)}
                   className={clsx(
-                    "flex items-center justify-center h-10 rounded-xl text-[14px] font-black tracking-tighter transition-colors active:scale-90 border",
+                    "flex items-center justify-center h-10 rounded-xl text-[14px] font-black tracking-tighter transition-colors active:scale-90 border cursor-pointer",
                     isSelected 
                       ? isBus 
                         ? "bg-blue-500 border-blue-500 text-white shadow-md shadow-blue-500/20" 

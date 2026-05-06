@@ -4,14 +4,16 @@ import { useAuth } from '../contexts/AuthContext.tsx'
 import gsap from 'gsap'
 import { User, ArrowOutRightSquareHalf, UserCircle } from "@boxicons/react"
 import { doSignInWithPopup, doSignOut, doSignInWithRedirect } from './../lib/authService.ts'
-import googleIcon from "/GoogleIcon.svg"
-import { GoogleAuthProvider } from "firebase/auth"
+import { GoogleAuthProvider, FacebookAuthProvider, GithubAuthProvider, OAuthProvider } from "firebase/auth"
 import { useTranslation } from "react-i18next"
+import { googleIcon, facebookIcon, githubIconLight, githubIconDark, microsoftIcon } from './../const/icons.ts'
+import { useTheme } from "../hooks/useTheme.ts"
 
 export default function Profile() {
   const { userLoggedIn, user } = useAuth()
-  const { shownLines } = useAppStore()
+  const { shownLines, favoriteStops } = useAppStore()
   const { t } = useTranslation()
+  const { isDark } = useTheme()
   
   const cardRef = useRef(null)
 
@@ -28,14 +30,12 @@ export default function Profile() {
 
   function isMobile() { return window.matchMedia("(max-width: 768px)").matches }
 
-  async function signIn() {
-    const provider = new GoogleAuthProvider()
-
+  async function signIn(provider: any) {
     if (isMobile()) {
       await doSignInWithRedirect({ provider })
     } else {
       try {
-        await doSignInWithPopup({ shownLines, provider })
+        await doSignInWithPopup({ shownLines, provider, favoriteStops })
       } catch (error: any) {
         console.error("Błąd logowania popup:", error.message);
       }
@@ -76,15 +76,16 @@ export default function Profile() {
                 {shownLines.length > 0 ? t('profile.stats.linesCount', { count: shownLines.length }) : t('profile.stats.noLines')}
               </span>
             </div>
-            {/* <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50">
-              <span className="block text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">Status konta</span>
-              <span className="text-[13px] font-bold text-zinc-700 dark:text-zinc-200">Standard</span>
-            </div> */}
+            <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50">
+              <span className="block text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">{t('profile.stats.savedStops')}</span>
+              <span className="text-[13px] font-bold text-zinc-700 dark:text-zinc-200">{favoriteStops.length}</span>
+            </div>
           </div>
 
           <button 
             onClick={doSignOut}
-            className="w-full flex items-center justify-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 font-black py-3 rounded-xl hover:bg-red-600 hover:text-white transition-all active:scale-95 text-[11px] uppercase tracking-widest border border-red-100 dark:border-red-900/30"
+            className="w-full flex items-center justify-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 font-black py-3 rounded-xl hover:bg-red-600 hover:text-white
+              transition-all active:scale-95 text-[11px] uppercase tracking-widest border border-red-100 dark:border-red-900/30 cursor-pointer"
           >
             <ArrowOutRightSquareHalf size="xs" /> {t('profile.signOut')}
           </button>
@@ -107,11 +108,13 @@ export default function Profile() {
           <p className="text-[12px] text-zinc-500 font-medium mt-1 leading-snug">
             {t('profile.login.subtitle')}
           </p>
+          <div className="text-xs opacity-30 mt-0.5">Release: {__APP_VERSION__}; {__BUILD_DATE__}</div>
         </div>
         <div className="grow">
           <button 
-            onClick={signIn}
-            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-3 rounded-xl text-[13px] font-bold text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all shadow-sm"
+            onClick={() => signIn(new GoogleAuthProvider())}
+            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-3 rounded-xl text-[13px] font-bold
+              text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all shadow-sm cursor-pointer"
           >
             <img src={googleIcon} alt="Logo firmy Google" className="w-5" />
             {t('profile.login.continueWithGoogle')}
@@ -122,6 +125,45 @@ export default function Profile() {
             <span className="shrink mx-4 text-[10px] font-black text-zinc-300 uppercase tracking-widest">{t('profile.login.or')}</span>
             <div className="grow border-t border-zinc-100 dark:border-zinc-900"></div>
           </div>
+
+          <button 
+            onClick={() => signIn(new FacebookAuthProvider())}
+            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-3 rounded-xl text-[13px] font-bold
+              text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all shadow-sm cursor-pointer"
+          >
+            <img src={facebookIcon} alt="Logo firmy Facebook" className="w-5" />
+            {t('profile.login.continueWithFacebook')}
+          </button>
+
+          <div className="relative flex items-center py-2">
+            <div className="grow border-t border-zinc-100 dark:border-zinc-900"></div>
+            <span className="shrink mx-4 text-[10px] font-black text-zinc-300 uppercase tracking-widest">{t('profile.login.or')}</span>
+            <div className="grow border-t border-zinc-100 dark:border-zinc-900"></div>
+          </div>
+
+          <button 
+            onClick={() => signIn(new OAuthProvider("microsoft.com"))}
+            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-3 rounded-xl text-[13px] font-bold
+              text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all shadow-sm cursor-pointer"
+          >
+            <img src={microsoftIcon} alt="Logo firmy Microsoft" className="w-5" />
+            {t('profile.login.continueWithMicrosoft')}
+          </button>
+
+          <div className="relative flex items-center py-2">
+            <div className="grow border-t border-zinc-100 dark:border-zinc-900"></div>
+            <span className="shrink mx-4 text-[10px] font-black text-zinc-300 uppercase tracking-widest">{t('profile.login.or')}</span>
+            <div className="grow border-t border-zinc-100 dark:border-zinc-900"></div>
+          </div>
+
+          <button 
+            onClick={() => signIn(new GithubAuthProvider())}
+            className="w-full flex items-center justify-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 py-3 rounded-xl text-[13px] font-bold
+              text-zinc-700 dark:text-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-95 transition-all shadow-sm cursor-pointer"
+          >
+            <img src={isDark ? githubIconDark : githubIconLight} alt="Logo firmy Github" className="w-5" />
+            {t('profile.login.continueWithGithub')}
+          </button>
         </div>
       </div>
     </div>

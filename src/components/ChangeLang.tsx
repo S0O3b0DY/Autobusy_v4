@@ -1,6 +1,6 @@
 
 import { useState, useRef, useEffect } from 'react'
-import { Sun, Moon, ChevronDown, Check, Superset } from "@boxicons/react"
+import { ChevronDown, Check } from "@boxicons/react"
 import gsap from 'gsap'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES } from '../const/lang'
@@ -8,7 +8,7 @@ import { SUPPORTED_LANGUAGES } from '../const/lang'
 
 
 export default function ThemeToggle() {
-  const { t, i18n } = useTranslation()
+  const { i18n } = useTranslation()
 
   const [dropdownShown, setDropDownShown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -102,7 +102,7 @@ function LangOption({ label, flagUrl, active, onClick }: { label: string, flagUr
           : 'hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'}
       `}
     >
-      <img src={flagUrl} alt={label} className={active ? "opacity-100 w-4.5" : "opacity-40 w-4.5"} />
+      <img src={flagUrl} alt={label} className={active ? "opacity-100 w-4.5" : "opacity-50 w-4.5"} />
       <span className="text-[13px] tracking-tight flex-1 text-left">{label}</span>
       {active && <Check size="xs" className="animate-in zoom-in duration-300" />}
     </button>

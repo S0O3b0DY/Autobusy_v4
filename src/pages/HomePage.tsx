@@ -1,13 +1,13 @@
 
-import { useTheme } from '../hooks/useTheme'
 import { useEffect, useRef } from "react"
 //@ts-ignore
 import maplibregl, { Map as MapLibreMap, Marker} from "maplibre-gl"
 import gsap from "gsap"
+import { doc, setDoc } from "firebase/firestore"
 
 import "maplibre-gl/dist/maplibre-gl.css"
 import { osmProviders } from '../lib/osmProviders'
-import stops from '../lib/stops'
+import stops from '../const/stops.ts'
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
@@ -15,27 +15,47 @@ import LoadingScreen from './../components/LoadingScreen'
 import ChangeLang from './../components/ChangeLang'
 
 import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
+import { useTheme } from '../hooks/useTheme'
 import { useAppStore } from "../lib/store"
+import { useAuth } from '../contexts/AuthContext'
+import { dbF } from '../lib/firebase.ts'
+
+import { STOP_ICON_COLORS, VEHICLE_COLORS } from "../const/colors.ts"
+import type { StopIconType } from "../types"
+import type { GeoJSONSource } from "maplibre-gl"
+import { BUS_STOPS_SEARCH_LAYER } from "../components/StopSearch.tsx"
 
 
 const REFRESH = import.meta.env.VITE_REFRESH
+export const BUS_STOPS_SOURCE = 'bus-stops'
+export const BUS_STOPS_LAYER  = 'bus-stops-layer'
 
 export default function App() {
+  const { userLoggedIn, user } = useAuth()
   const { isDark, toggle } = useTheme()
-
-
   const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList,
-    setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines } = useAppStore()
+    setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops } = useAppStore()
 
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
-  const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
+  // const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
   const countdownRef = useRef<any>(null)
 
   const polylineRef = useRef<RoutePolyline[] | null>(null)
   const routeStopsRef = useRef<BusStopData[] | null>(null)
   const currentRouteIdRef = useRef<number | null>(null)
   const selectedBusStopRef = useRef<BusStopData | null>(selectedBusStop)
+
+  useEffect(() => {
+    const save = async () => {
+      const userRef = doc(dbF, "users", user.uid)
+      
+      await setDoc(userRef, { favoriteStops: favoriteStops }, { merge: true })
+    }
+    
+    if (!userLoggedIn) return
+    save()
+  }, [favoriteStops])
 
   useEffect(() => {
     selectedBusStopRef.current = selectedBusStop
@@ -58,6 +78,18 @@ export default function App() {
     //   const { lng, lat } = e.lngLat
     //   console.log(`Kliknięto: ${lat.toFixed(5)}, ${lng.toFixed(5)}`)
     // })
+
+    mapInstance.on("load", async () => {
+      const dpr = window.devicePixelRatio || 1
+      const types: StopIconType[] = ['default', 'selected', 'first', 'last']
+      await Promise.all(
+        types.map(async (type) => {
+          if (mapInstance.hasImage(`stop-${type}`)) return
+          const img = await createStopIcon(type)
+          mapInstance.addImage(`stop-${type}`, img, { pixelRatio: dpr })
+        })
+      )
+    })
     
     setMap(mapInstance)
 
@@ -178,19 +210,24 @@ export default function App() {
       }
 
       const isBus = vehicle.vehType === "A"
-      let color = isBus ? "#18295e" : "#7e2014"
+      let color = isBus
+        ? (isDark ? VEHICLE_COLORS.dark.defaultBus : VEHICLE_COLORS.light.defaultBus)
+        : (isDark ? VEHICLE_COLORS.dark.defaultTram : VEHICLE_COLORS.light.defaultTram)
 
       function cropLine(str: string | undefined): string {
         if (/^[a-zA-Z]+$/.test(str || "") && str?.length===1) return str
         return str ? str.replace(/[a-zA-Z]$/, "") : ""
       }
 
+      const cond1 = cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)
+      const cond2 = selectedVehicle?.sideNum === vehicle.sideNum
+
       if (vehicle.vehType === "A") {
-        if (cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) color = "#2a4aa3"
-        if (selectedVehicle?.sideNum === vehicle.sideNum) color = "#084202"
+        if (cond1) color = (isDark ? VEHICLE_COLORS.dark.busGroup : VEHICLE_COLORS.light.busGroup)
+        if (cond2) color = (isDark ? VEHICLE_COLORS.dark.selectedBus : VEHICLE_COLORS.light.selectedBus)
       } else {
-        if (cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) color = "#af4202"
-        if (selectedVehicle?.sideNum === vehicle.sideNum) color = "#084202"
+        if (cond1) color = (isDark ? VEHICLE_COLORS.dark.tramGroup : VEHICLE_COLORS.light.tramGroup)
+        if (cond2) color = (isDark ? VEHICLE_COLORS.dark.selectedTram : VEHICLE_COLORS.light.selectedTram)
       }
 
       if (existingMarker) {
@@ -313,13 +350,28 @@ export default function App() {
   
   // change stop icon color on map wether selectedBusStop changes
   useEffect(() => {
-    BSMarkersRef.current.forEach((marker, id) => {
-      const el = marker.getElement()
-      const isSelected = id === selectedBusStop?.id
+    const source = map?.getSource(BUS_STOPS_SOURCE) as GeoJSONSource | undefined
+    if (!source) return
 
-      el.style.background = isSelected
-        ? "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
-        : "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
+    const stops_list = routeStopsRef.current ?? []
+    const total = stops_list.length
+    const selectedId = selectedBusStop?.id
+
+    source.setData({
+      type: 'FeatureCollection',
+      features: stops_list.map((stop, index) => {
+        let iconType: StopIconType = resolveIconType(stop, index, total, selectedId)
+
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: [stop.x, stop.y] },
+          properties: {
+            id:       stop.id,
+            iconType: `stop-${iconType}`,
+            stopJson: JSON.stringify(stop),
+          },
+        }
+      }),
     })
   }, [selectedBusStop])
 
@@ -369,8 +421,10 @@ export default function App() {
 
     // Usuń starą warstwę przed dodaniem nowej
     removeRoute(false)
+
     
 
+    // ROUTE
     map?.addSource("route", {
       type: "geojson",
       data: {
@@ -382,7 +436,6 @@ export default function App() {
         }
       }
     })
-
     map?.addLayer({
       id: "route-line",
       type: "line",
@@ -390,28 +443,55 @@ export default function App() {
       layout: { "line-join": "round", "line-cap": "round" },
       paint: { "line-color": "#ff5b03", "line-width": 4 }
     })
+    map?.moveLayer(BUS_STOPS_SEARCH_LAYER)
 
-    routeStopsRef.current?.forEach((stop, index) => {
-      let gradient = "linear-gradient(180deg,rgba(255, 234, 0, 1) 1%, rgba(224, 191, 0, 1) 100%)"
-      if (stop.id === selectedBusStopRef.current?.id) gradient = "linear-gradient(180deg,rgba(54, 215, 255, 1) 1%, rgba(27, 187, 227, 1) 100%)"
-      if (index === 0) gradient = "linear-gradient(180deg,rgba(0, 204, 24, 1) 0%, rgba(0, 176, 0, 1) 100%)"
-      if (index === (routeStopsRef.current?.length || 0)-1) gradient = "linear-gradient(180deg,rgba(224, 18, 18, 1) 0%, rgba(179, 32, 32, 1) 100%)"
 
-      const el = document.createElement('div')
-      el.style.cssText = `width:18px; height:18px; border-radius:100%; background:${gradient}; cursor:pointer; font-size:0rem; border:2px solid #666; zIndex:1;`
-      el.textContent = stop.id+"; "+stop.n
 
-      const marker = new Marker({ element: el, anchor: "center" })
-        .setLngLat([stop.x, stop.y])
-        .addTo(map!)
 
-      BSMarkersRef.current.set(stop.id, marker)
+    // BUS STOPS
+    const total = routeStopsRef.current?.length || 0
 
-      el.addEventListener("click", (e) => {
-        e.stopPropagation()
-        setSelectedBusStop(stop)
-        setMenuState(3)
-      })
+    const geojson: GeoJSON.FeatureCollection = {
+      type: 'FeatureCollection',
+      features: routeStopsRef.current?.map((stop, index) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [stop.x, stop.y] },
+        properties: {
+          id:       stop.id,
+          name:     stop.n,
+          iconType: `stop-${resolveIconType(stop, index, total, selectedBusStopRef.current?.id)}`,
+          // cały obiekt jako JSON – przyda się przy kliknięciu
+          stopJson: JSON.stringify(stop),
+        },
+      })) || [],
+    }
+
+    map?.addSource(BUS_STOPS_SOURCE, { type: 'geojson', data: geojson })
+    map?.addLayer({
+      id:     BUS_STOPS_LAYER,
+      type:   'symbol',
+      source: BUS_STOPS_SOURCE,
+      layout: {
+        'icon-image':             ['get', 'iconType'],
+        'icon-size':              1,
+        'icon-allow-overlap':     true,
+        'icon-ignore-placement':  true,
+      },
+    })
+    map?.on('mouseenter', BUS_STOPS_LAYER, () => {
+      map.getCanvas().style.cursor = 'pointer'
+    })
+    map?.on('mouseleave', BUS_STOPS_LAYER, () => {
+      map.getCanvas().style.cursor = ''
+    })
+
+    map?.on('click', BUS_STOPS_LAYER, (e) => {
+      e.preventDefault()
+      const feature = e.features?.[0]
+      if (!feature) return
+      const stop: BusStopData = JSON.parse(feature.properties.stopJson)
+      setSelectedBusStop(stop)
+      setMenuState(3)
     })
 
     setRouteBusStops(routeStopsRef.current || [])
@@ -421,11 +501,13 @@ export default function App() {
   function removeRoute(resetRef = true): void {
     if (map?.getLayer("route-line")) map.removeLayer("route-line")
     if (map?.getSource("route"))     map.removeSource("route")
+    if (map?.getLayer(BUS_STOPS_LAYER))   map.removeLayer(BUS_STOPS_LAYER)
+    if (map?.getSource(BUS_STOPS_SOURCE)) map.removeSource(BUS_STOPS_SOURCE)
 
-    BSMarkersRef.current.forEach(marker => marker.remove())
-    BSMarkersRef.current.clear()
-
-    if (resetRef) currentRouteIdRef.current = null
+    if (resetRef) {
+      currentRouteIdRef.current = null
+      routeStopsRef.current = null
+    }
   }
 
   return (
@@ -435,14 +517,14 @@ export default function App() {
       </div>}
 
       <BottomSheet>
-        <Menu BSMarkersRef={BSMarkersRef} currentRouteIdRef={currentRouteIdRef}/>
+        <Menu currentRouteIdRef={currentRouteIdRef} routeStopsRef={routeStopsRef} />
       </BottomSheet>
 
       <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
         <ChangeLang />
         <div className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
-          rounded-full flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 z-10 text-[13px] font-bold tracking-tight
+          rounded-full flex items-center justify-center gap-2 shadow-sm z-10 text-[13px] font-bold tracking-tight
           text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
       </div>
 
@@ -460,4 +542,43 @@ function formatTime(sec: number): string {
   const pad = (n: number) => String(n).padStart(2, "0")
 
   return pad(h) + ":" + pad(m) + ":" + pad(s)
+}
+
+function createStopIcon(type: StopIconType): Promise<HTMLImageElement> {
+  const [top, bottom] = STOP_ICON_COLORS[type]
+  // Unikalny gradId żeby nie kolizja w SVG spec
+  const gradId = `g-${type}`
+  const dpr = window.devicePixelRatio || 1
+  const size = 18 * dpr
+
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <defs>
+        <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="1%"   stop-color="${top}"    />
+          <stop offset="100%" stop-color="${bottom}" />
+        </linearGradient>
+      </defs>
+      <circle cx="9" cy="9" r="7"
+        fill="url(#${gradId})"
+        stroke="#666" stroke-width="2"
+      />
+    </svg>`
+
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svg], { type: 'image/svg+xml' })
+    const url  = URL.createObjectURL(blob)
+    const img  = new Image(size, size)
+    img.onload  = () => { URL.revokeObjectURL(url); resolve(img) }
+    img.onerror = reject
+    img.src = url
+  })
+}
+
+export function resolveIconType(stop: BusStopData, index: number, total: number, selectedId: number | undefined,): StopIconType {
+  if (stop.id === selectedId) return 'selected'
+  if (index === 0)            return 'first'
+  if (index === total - 1)    return 'last'
+  return 'default'
 }

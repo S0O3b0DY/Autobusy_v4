@@ -50,7 +50,8 @@
 
   "profile": {
     "stats": {
-      "activeFilters": "Active Filters",
+      "activeFilters": "Displayed lines on map",
+      "savedStops": "Saved stops",
       "linesCount": "{{count}} lines",
       "noLines": "None"
     },
@@ -59,6 +60,9 @@
       "title": "Sign in",
       "subtitle": "Sync your lines and other settings.",
       "continueWithGoogle": "Continue with Google",
+      "continueWithFacebook": "Continue with Facebook",
+      "continueWithMicrosoft": "Continue with Microsoft",
+      "continueWithGithub": "Continue with Github",
       "or": "or"
     }
   },

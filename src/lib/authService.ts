@@ -1,21 +1,19 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  updatePassword, sendPasswordResetEmail, sendEmailVerification,
+  // RecaptchaVerifier, signInWithPhoneNumber,
   signInWithPopup, signInWithRedirect, browserPopupRedirectResolver } from "firebase/auth"
 import { auth, dbF } from "./firebase"
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 
-export async function doCreateUserWithEmailAndPassword({email, password}: {email: string, password: string}) {
-  return createUserWithEmailAndPassword(auth, email, password)
-}
+// export async function doCreateUserWithEmailAndPassword({email, password}: {email: string, password: string}) {
+//   return createUserWithEmailAndPassword(auth, email, password)
+// }
 
-export async function doSignInWithEmailAndPassword({email, password}: {email: string, password: string}) {
-  return signInWithEmailAndPassword(auth, email, password)
-}
+// export async function doSignInWithEmailAndPassword({email, password}: {email: string, password: string}) {
+//   return signInWithEmailAndPassword(auth, email, password)
+// }
 
-export async function doSignInWithPopup({ shownLines, provider }: { shownLines: string[], _width?: number, _height?: number, provider: any }) {
-
+export async function doSignInWithPopup({ shownLines, provider, favoriteStops }: { shownLines: string[], _width?: number, _height?: number, provider: any, favoriteStops: number[] }) {
   // provider.setCustomParameters({ prompt: 'select_account' })
-
   const result = await signInWithPopup(auth, provider)
   const user = result.user
 
@@ -31,8 +29,8 @@ export async function doSignInWithPopup({ shownLines, provider }: { shownLines: 
       photoURL: user.photoURL,
       createdAt: serverTimestamp(),
       lastLogin: serverTimestamp(),
-
-      shownLines: shownLines
+      favoriteStops: favoriteStops,
+      shownLines: shownLines,
     })
   } else {
     // Logowanie: Aktualizujemy tylko datę wejścia
@@ -49,22 +47,33 @@ export async function doSignInWithRedirect({ provider }: { provider: any }) {
   await signInWithRedirect(auth, provider, browserPopupRedirectResolver)
 }
 
+// export async function doSignInWithPhoneNumber({ phoneNuber }: { phoneNuber: string }) {
+//   try {
+//     const recaptcha = new RecaptchaVerifier(auth, "recaptcha", {})
+//     const confirmation = signInWithPhoneNumber(auth, phoneNuber, recaptcha)
+
+//     console.log(confirmation)
+//   } catch (err: any) {
+//     console.error(err.message)
+//   }
+// }
+
 export async function doSignOut() {
   return auth.signOut()
 }
 
-export async function doPasswordReset({email}: {email: string}) {
-  return sendPasswordResetEmail(auth, email)
-}
+// export async function doPasswordReset({email}: {email: string}) {
+//   return sendPasswordResetEmail(auth, email)
+// }
 
-export async function doPasswordChange({password}: {password: string}) {
-  if (auth.currentUser) {
-    return updatePassword(auth.currentUser, password)
-  }
-}
+// export async function doPasswordChange({password}: {password: string}) {
+//   if (auth.currentUser) {
+//     return updatePassword(auth.currentUser, password)
+//   }
+// }
 
-export async function doSendEmailVerification() {
-  return auth.currentUser && sendEmailVerification(auth.currentUser, {
-    url: `${window.location.origin}/home`
-  })
-}
+// export async function doSendEmailVerification() {
+//   return auth.currentUser && sendEmailVerification(auth.currentUser, {
+//     url: `${window.location.origin}/home`
+//   })
+// }

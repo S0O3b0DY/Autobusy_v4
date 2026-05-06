@@ -1,16 +1,21 @@
 
-import { useState, useEffect, useCallback, useRef } from "react"
-import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight } from "@boxicons/react"
+import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
+import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight, Star } from "@boxicons/react"
 import clsx from "clsx"
 import { useAppStore } from "../lib/store"
-import type { BusStopTimetable } from './../types/index.d.ts'
+import type { BusStopTimetable, BusStopData } from './../types/index.d.ts'
 import { useTranslation } from "react-i18next"
+import { BUS_STOPS_SEARCH_LAYER, BUS_STOPS_SEARCH_SOURCE } from "./StopSearch.tsx"
 
 const REFRESH = 30
 
-export default function BusStop() {
+type Props = {
+  routeStopsRef: RefObject<BusStopData[] | null>
+}
+
+export default function BusStop({ routeStopsRef }: Props) {
   const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle, shownLines,
-    setShownLines } = useAppStore()
+    setShownLines, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
 
   const [timeLeft, setTimeLeft] = useState(30)
@@ -85,7 +90,25 @@ export default function BusStop() {
     })
   }
 
+  const addToFavorites = (id: number) => {
+    if (favoriteStops.includes(id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== id))
+    } else {
+      setFavoriteStops([...favoriteStops, id])
+    }
+  }
+
   if (!selectedBusStop) return null
+
+  
+  function removeFromMap(stop: BusStopData | null) {
+    // console.log(stop,routeStopsRef.current?.find(st => st.id === stop?.id)?.id,stop?.id , routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id)
+    if (routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id) {
+      // console.log("I do pieca")
+      if (map?.getLayer(BUS_STOPS_SEARCH_LAYER))   map.removeLayer(BUS_STOPS_SEARCH_LAYER)
+      if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
+    }
+  }
 
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
@@ -97,16 +120,27 @@ export default function BusStop() {
         </h2>
 
         <div className="flex items-center gap-1.5 shrink-0">
-          <div 
+          <button 
             className="flex items-center gap-2 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1.5 rounded-md hover:bg-zinc-50 dark:hover:bg-zinc-700 active:scale-95 transition-all cursor-pointer shadow-sm" 
             onClick={handleManualReset}
           >
             <span className="text-[12px] font-mono font-medium">{timeLeft}s</span>
             <RefreshCw size="sm" className={clsx("text-zinc-500", isRefreshing && "animate-spin")} />
-          </div>
+          </button>
           <button 
-            onClick={() => { setSelectedBusStop(null); setMenuState(0); }}
-            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm"
+            onClick={() => { addToFavorites(selectedBusStop.id) }}
+            className={clsx(
+              "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm cursor-pointer",
+              favoriteStops.includes(selectedBusStop.id) 
+                ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400" 
+                : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-400"
+            )}
+          >
+            {favoriteStops.includes(selectedBusStop.id) ? <Star pack="filled" size="sm"/> : <Star size="sm"/>}
+          </button>
+          <button 
+            onClick={() => { setSelectedBusStop(null); setMenuState(0); removeFromMap(selectedBusStop) }}
+            className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm cursor-pointer"
           >
             <X size="sm" />
           </button>

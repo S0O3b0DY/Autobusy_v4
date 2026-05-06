@@ -50,7 +50,8 @@
 
   "profile": {
     "stats": {
-      "activeFilters": "Aktive Filter",
+      "activeFilters": "Angezeigte Linien auf der Karte",
+      "savedStops": "Gespeicherte Stopps",
       "linesCount": "{{count}} Linien",
       "noLines": "Keine"
     },
@@ -59,6 +60,9 @@
       "title": "Anmelden",
       "subtitle": "Synchronisiere deine Linien und andere Einstellungen.",
       "continueWithGoogle": "Mit Google fortfahren",
+      "continueWithFacebook": "Mit Facebook fortfahren",
+      "continueWithMicrosoft": "Mit Microsof fortfahren",
+      "continueWithGithub": "Mit Github fortfahren",
       "or": "oder"
     }
   },

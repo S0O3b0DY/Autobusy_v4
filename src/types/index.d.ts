@@ -142,7 +142,7 @@ export type LangsList = {
   [key: string]: LangsListObj
 }
 
-
+export type StopIconType = 'default' | 'selected' | 'first' | 'last'
 
 
 
