@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 
 import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route,
   Sigma, List, Check, InfoCircle, ListUl, Star } from "@boxicons/react"
+=======
+import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sigma, List, Check, InfoCircle, ListUl } from "@boxicons/react"
+>>>>>>> main
 import { useAppStore } from "../lib/store"
 import clsx from "clsx"
 import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
@@ -9,6 +13,7 @@ import busStops from '../const/stops.ts'
 
 import { getDatabase, ref, push, get } from "firebase/database"
 import { app }from './../lib/firebase.ts'
+<<<<<<< HEAD
 import { useTranslation } from "react-i18next"
 import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/HomePage"
 
@@ -23,12 +28,21 @@ type Props = {
   routeStopsRef: RefObject<BusStopData[] | null>
 }
 
+=======
+
+
+>>>>>>> main
 const addTime = (hours = 0, minutes = 0, seconds = 0) => {
   const date = new Date()
   date.setHours(date.getHours() + hours)
   date.setMinutes(date.getMinutes() + minutes)
   date.setSeconds(date.getSeconds() + seconds)
   return date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
+}
+
+interface Coords {
+  lat: number
+  lng: number
 }
 
 const getBearing = (prev: Coords, current: Coords): number => {
@@ -54,9 +68,13 @@ const getBearing = (prev: Coords, current: Coords): number => {
 export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const db = getDatabase(app)
 
+<<<<<<< HEAD
   const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop,
     setRouteBusStops, setRoutePolyline, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
+=======
+  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, setRouteBusStops, setRoutePolyline } = useAppStore()
+>>>>>>> main
 
   const [timeLeft, setTimeLeft] = useState(30)
   //@ts-ignore
@@ -179,6 +197,8 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   
   const bgColor = "bg-blue-500"
 
+
+
   const handleSubmit = () => {
     console.log(selectRef.current?.value)
     addBus(selectedVehicle.sideNum, selectRef.current?.value || "")
@@ -201,10 +221,10 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200/50 dark:border-zinc-800/50">
           <div className="flex items-center gap-2 mb-1">
             <InfoCircle size="xs" className="text-blue-500" />
-            <h3 className="text-[14px] font-bold text-zinc-800 dark:text-zinc-100">{t('vehicle.setType.title')}</h3>
+            <h3 className="text-[14px] font-bold text-zinc-800 dark:text-zinc-100">Ustaw typ pojazdu</h3>
           </div>
           <p className="text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            {t('vehicle.setType.description')}
+            Wybierz typ pojazdu, który przyjedzie, by usprawnić aplikację.
           </p>
         </div>
 
@@ -212,7 +232,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         <div className="p-5 space-y-4">
           <div className="space-y-2">
             <label className="text-[11px] font-black uppercase tracking-widest text-zinc-400 ml-1">
-              {t('vehicle.setType.selectLabel')}
+              Opcja wyświetlania
             </label>
             
             <div className="relative group">
@@ -225,14 +245,14 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                 className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 pl-10 pr-4 text-[14px] font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer text-zinc-700 dark:text-zinc-200"
                 defaultValue=""
               >
-                <option value="" disabled hidden>{t('vehicle.setType.selectPlaceholder')}</option>
-                <option value="Krótki - Isuzu">{t('vehicle.setType.types.short_isuzu')}</option>
-                <option value="Standardowy - Solaris (najnowszy)">{t('vehicle.setType.types.standard_solaris_new')}</option>
-                <option value="Standardowy - Solaris">{t('vehicle.setType.types.standard_solaris')}</option>
-                <option value="Standardowy - Mercedes">{t('vehicle.setType.types.standard_mercedes')}</option>
-                <option value="Przegłubowy - Solaris (najnowszy)">{t('vehicle.setType.types.articulated_solaris_new')}</option>
-                <option value="Przegłubowy - Solaris">{t('vehicle.setType.types.articulated_solaris')}</option>
-                <option value="Przegłubowy - Mercedes">{t('vehicle.setType.types.articulated_mercedes')}</option>
+                <option value="" disabled hidden>Wybierz jedną z opcji...</option>
+                <option value="Krótki - Isuzu">Krótki - Isuzu</option>
+                <option value="Standardowy - Solaris (najnowszy)">Standardowy - Solaris (najnowszy)</option>
+                <option value="Standardowy - Solaris">Standardowy - Solaris</option>
+                <option value="Standardowy - Mercedes">Standardowy - Mercedes</option>
+                <option value="Przegłubowy - Solaris (najnowszy)">Przegłubowy - Solaris (najnowszy)</option>
+                <option value="Przegłubowy - Solaris">Przegłubowy - Solaris</option>
+                <option value="Przegłubowy - Mercedes">Przegłubowy - Mercedes</option>
               </select>
 
               {/* Własna strzałka dla selecta */}
@@ -250,14 +270,14 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
             className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.97] transition-all duration-150"
           >
             <Check size="sm" />
-            {t('vehicle.setType.apply')}
+            Zastosuj zmiany
           </button>
         </div>
 
         {/* Footer */}
         <div className="px-5 py-3 bg-zinc-50/50 dark:bg-zinc-900/20 border-t border-zinc-200/50 dark:border-zinc-800/50">
           <p className="text-[10px] text-center text-zinc-400 font-medium">
-            {t('vehicle.setType.disclaimer')}
+            To ma realny wpływ na działanie aplikacji.
           </p>
         </div>
 
@@ -318,7 +338,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         {/* LEWA STRONA: OŚ CZASU TRASY */}
         <div className="flex-1 flex flex-col min-w-0 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
-            {!stops && <p className="text-center mt-2 text-sm text-zinc-500">{t('vehicle.loading')}</p>}
+            {!stops && <p className="text-center mt-2 text-sm text-zinc-500">Ładowanie danych ...</p>}
 
             {stops && stops.dep.map((stop) => {
               const isLive = stop.timeDepPredMode === 1
@@ -327,7 +347,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               let textColor = "text-zinc-700 dark:text-zinc-400"
 
               if (isLive) {
-                depText = t('vehicle.departure.lessThan1min')
+                depText = "<1min"
                 textColor = "text-red-500"
               } 
               else if (stop.timeDepPredMode === 2) {
@@ -398,14 +418,14 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         {/* PRAWA STRONA: INFORMACJE */}
         <div className="w-full md:w-56 bg-zinc-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-4 border-t md:border-t-0 border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
           <h3 className="text-[14px] font-bold tracking-tight text-zinc-800 dark:text-zinc-100">
-            {t('vehicle.info.title')}
+            Informacje:
           </h3>
           
           <div className="flex flex-col gap-3">
             <div className="flex items-start gap-3">
               <Hashtag size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.sideNumber')}</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Numer boczny</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
                   {selectedVehicle.sideNum}
                 </span>
@@ -415,9 +435,9 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
             <div className="flex items-start gap-3">
               <Route size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.route')}</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Trasa</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {selectedVehicle.routeId || selectedVehicle.nextRouteId || t('vehicle.info.noData')}
+                  {selectedVehicle.routeId || selectedVehicle.nextRouteId || "Brak danych"}
                 </span>
               </div>
             </div>
@@ -425,9 +445,9 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
             <div className="flex items-start gap-3">
               <Sigma size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.totalStops')}</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Łącznie przystanków</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {stops?.dep ? stops.dep[stops.dep.length - 1].no : t('vehicle.loading')}
+                  {stops?.dep ? stops.dep[stops.dep.length - 1].no : "Ładowanie..."}
                 </span>
               </div>
             </div>
@@ -435,16 +455,17 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
             <div className="flex items-start gap-3 mb-10">
               <List size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Typ pojazdu</span>
                 
-                <span className="text-[13px] font-medium text-white dark:text-zinc-300">
+                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
                   {vehType===null ? (
                     <div className="mt-2">
+
                       <button
                         className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95 cursor-pointer"
                         onClick={() => setMenuVehType(true)}
                       >
-                        {t('vehicle.setType.buttonLabel')}
+                        Ustaw
                       </button>
                     </div>
                   ) : vehType}

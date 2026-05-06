@@ -1,5 +1,9 @@
+<<<<<<< HEAD:src/const/stops.ts
 
 import type { BusStopData } from '../types'
+=======
+﻿import type { BusStopData } from './../types/index'
+>>>>>>> main:src/lib/stops.ts
 
 export default [
   { "id": 1, "n": "Abramowskiego-Sienkiewicza", "y": 51.75424, "x": 19.46545, "z": 1 },

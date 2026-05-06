@@ -1,4 +1,3 @@
-
 // ==========================
 // STOPS
 // ==========================
@@ -130,6 +129,7 @@ interface LiveVehiclesList {
   trams: string[]
 }
 
+<<<<<<< HEAD
 
 
 
@@ -175,6 +175,8 @@ export type StopIconType = 'default' | 'selected' | 'first' | 'last'
 
 
 
+=======
+>>>>>>> main
 // export type DirectionType = 'P' | 'T';
 // export type VehicleType = 'T' | 'A'; // T=tram, A=bus
 // export type VehicleStatus = 1 | 2 | 3 | 6 | 7; // 1=moving, 2=at stop, 3=depot, 6=inactive, 7=off-route

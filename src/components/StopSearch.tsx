@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 
 import { useMemo, type RefObject } from "react"
 import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@boxicons/react"
+=======
+import { useMemo, useRef } from "react"
+import { X, Search, PinAlt, ChevronRight, InfoCircle } from "@boxicons/react"
+>>>>>>> main
 // @ts-ignore
 import { Map as MapLibreMap, Marker, type GeoJSONSource, GeoJSON } from "maplibre-gl"
 import { useAppStore } from "../lib/store.ts"
 import busStops from '../const/stops.ts'
 import type { BusStopData } from "../types/index"
+<<<<<<< HEAD
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../contexts/AuthContext.tsx"
 
@@ -21,6 +27,11 @@ export default function StopSearch({ routeStopsRef }: Props) {
   const { setSelectedBusStop, setMenuState, query, setQuery, map, favoriteStops, setFavoriteStops } = useAppStore()
   const { userLoggedIn } = useAuth()
   const { t } = useTranslation()
+=======
+
+export default function StopSearch({ BSMarkersRef }: any) {
+  const { setSelectedBusStop, setMenuState, query, setQuery, map } = useAppStore()
+>>>>>>> main
 
   // Algorytm wyszukiwania (min. 3 znaki)
   const filteredStops = useMemo(() => {
@@ -179,6 +190,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
       
+<<<<<<< HEAD
       <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         {/* LEWA STRONA - WYSZYKIWANIE */}
         <div className="flex-1 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
@@ -254,6 +266,49 @@ export default function StopSearch({ routeStopsRef }: Props) {
                 ))}
               </div>
             )}
+=======
+      {/* SEARCH INPUT SECTION */}
+      <div className="p-4 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30">
+        <div className="relative group">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-blue-500 transition-colors">
+            <Search size="sm" />
+          </div>
+          <input
+            type="text"
+            className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+            placeholder="Szukaj przystanku (np. Śląska)..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+          {query && (
+            <button 
+              onClick={() => setQuery("")}
+              className="absolute inset-y-0 right-3 flex items-center text-red-500 hover:text-red-400 dark:hover:text-red-400"
+            >
+              <X size="xs" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* RESULTS AREA */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
+        {query.length > 0 && query.length < 3 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+            <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
+                <InfoCircle size="md" className="opacity-50" />
+            </div>
+            <p className="text-[13px] font-medium italic">
+              Wpisz co najmniej <span className="text-zinc-600 dark:text-zinc-200 font-bold">3 znaki</span>, aby rozpocząć wyszukiwanie.
+            </p>
+          </div>
+        ) : query.length >= 3 && filteredStops.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+            <p className="text-[13px] font-medium">
+              Nie znaleziono przystanku o nazwie <span className="text-zinc-600 dark:text-zinc-200 font-bold">"{query}"</span>.
+            </p>
+>>>>>>> main
           </div>
         </div>
         <div className="w-full md:w-[50%] bg-zinc-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-4 border-t md:border-t-0 border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
@@ -317,7 +372,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
       {/* FOOTER */}
       <div className="px-4 py-3 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/30 flex justify-between items-center shrink-0">
         <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-          {t('stopSearch.footer.database', { count: busStops.length })}
+           Baza przystanków: {busStops.length}
         </span>
       </div>
     </div>

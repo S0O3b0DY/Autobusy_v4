@@ -1,10 +1,11 @@
-
+// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
-import { getAuth, browserPopupRedirectResolver, browserLocalPersistence, setPersistence } from "firebase/auth"
-import { getFirestore } from "firebase/firestore"
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  apikey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
   projectId:import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -13,11 +14,5 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 }
 
-const app = initializeApp(firebaseConfig)
-
-const dbF = getFirestore(app)
-const auth = getAuth(app)
-auth.settings.appVerificationDisabledForTesting = false
-setPersistence(auth, browserLocalPersistence)
-
-export { app, auth, dbF, browserPopupRedirectResolver }
+// Initialize Firebase
+export const app = initializeApp(firebaseConfig)

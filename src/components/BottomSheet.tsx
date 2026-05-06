@@ -1,10 +1,7 @@
-
 import { useRef, useEffect, useCallback } from "react"
-import { SliderAlt, Search, GitCommit, Bus, UserCircle } from "@boxicons/react"
+import { SliderAlt, Search, GitCommit, Bus } from "@boxicons/react"
 import clsx from "clsx"
 import { useAppStore } from "../lib/store"
-import { useAuth } from '../contexts/AuthContext.tsx'
-import { useTranslation } from 'react-i18next'
 
 import { useWindowSize } from "../hooks/useWindowSize"
 
@@ -20,8 +17,6 @@ interface Props {
 
 export default function BottomSheet({ children, title }: Props) {
   const { _width, _height } = useWindowSize()
-  const { userLoggedIn, user } = useAuth()
-  const { t } = useTranslation()
 
   // Zawsze aktualne snappy — ref czytany wewnątrz callbacków
   const snapsRef = useRef<number[]>([75, Math.round(_height / 2), _height - 50])
@@ -202,15 +197,23 @@ export default function BottomSheet({ children, title }: Props) {
         {children}
       </div>
 
+<<<<<<< HEAD
       <div className="absolute bottom-0 flex w-full px-10 justify-center gap-4 h-10 items-center bg-white/90
         py-6 rounded-t-2xl backdrop-blur-3xl dark:bg-neutral-900/70 border-t border-t-zinc-300 dark:border-t-zinc-600">
         <button
           className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 transition-all hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
           onClick={() => setMenuState(menuState === 1 ? 0 : 1)}
         >
+=======
+      <div className="absolute bottom-0 flex w-full px-10 justify-center gap-10 h-10 items-center bg-white/90
+        py-6 rounded-t-2xl backdrop-blur-3xl dark:bg-neutral-900/70">
+        <div className="absolute right-0 bottom-0 text-xs opacity-15">{__APP_VERSION__}; {__BUILD_DATE__}</div>
+
+        <button className="flex flex-col items-center justify-center transition-active active:scale-90 z-100" onClick={() => setMenuState(menuState === 1 ? 0 : 1)}>
+>>>>>>> main
           <SliderAlt className={clsx("text-[24px]", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 1 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
-            {t('nav.filter')}
+            Filtruj
           </span>
         </button>
 
@@ -220,7 +223,7 @@ export default function BottomSheet({ children, title }: Props) {
         >
           <Search className={clsx("text-[24px]", menuState === 2 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 2 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
-            {t('nav.search')}
+            Szukaj
           </span>
         </button>
 
@@ -230,7 +233,7 @@ export default function BottomSheet({ children, title }: Props) {
         >
           <GitCommit className={clsx("text-[24px]", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 3 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
-            {t('nav.stop')}
+            Przystanek
           </span>
         </button>}
 
@@ -240,10 +243,11 @@ export default function BottomSheet({ children, title }: Props) {
         >
           <Bus className={clsx("text-[24px]", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 4 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
-            {t('nav.vehicle')}
+            Pojazd
           </span>
         </button>}
 
+<<<<<<< HEAD
         <button
           className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
           onClick={() => setMenuState(menuState === 5 ? 0 : 5)}
@@ -253,6 +257,8 @@ export default function BottomSheet({ children, title }: Props) {
             {userLoggedIn ? user.displayName : t('nav.account')}
           </span>
         </button>
+=======
+>>>>>>> main
       </div>
     </div>
   )
