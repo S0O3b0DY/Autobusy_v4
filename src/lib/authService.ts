@@ -1,6 +1,4 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  // RecaptchaVerifier, signInWithPhoneNumber,
-  signInWithPopup, signInWithRedirect, browserPopupRedirectResolver } from "firebase/auth"
+import { signInWithPopup, signInWithRedirect, browserPopupRedirectResolver } from "firebase/auth"
 import { auth, dbF } from "./firebase"
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
 
