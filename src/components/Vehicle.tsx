@@ -20,6 +20,7 @@ import busStops from '../const/stops.ts'
 import clsx from "clsx"
 import { app } from './../lib/firebase.ts'
 import { getDatabase, ref, push, get } from "firebase/database"
+import posthog from "posthog-js"
 
 
 
@@ -60,6 +61,8 @@ const getBearing = (prev: Coords, current: Coords): number => {
   // Normalizacja do zakresu 0-360°
   return (bearing + 360) % 360
 }
+
+const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 
 export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const db = getDatabase(app)
@@ -197,11 +200,15 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
     setMenuVehType(false)
   }
 
-  const addToFavorites = (id: number) => {
-    if (favoriteStops.includes(id)) {
-      setFavoriteStops(favoriteStops.filter(l => l !== id))
+  function addToFavorites(stop: BusStopData | undefined) {
+    if (!stop) return
+
+    if (favoriteStops.includes(stop.id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== stop.id))
+      posthog.capture("removed_stop_from_fav", { name: stop.n, id: stop.id })
     } else {
-      setFavoriteStops([...favoriteStops, id])
+      setFavoriteStops([...favoriteStops, stop.id])
+      posthog.capture("added_stop_to_fav", { name: stop.n, id: stop.id })
     }
   }
 
@@ -395,7 +402,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                   </div>
 
                   {userLoggedIn && <button 
-                    onClick={() => { addToFavorites(stop.busStopID) }}
+                    onClick={() => { addToFavorites(busStopsMap.get(stop.busStopID)) }}
                     className={clsx(
                       "transition-all active:scale-95 cursor-pointer rounded-sm",
                       favoriteStops.includes(stop.busStopID) 

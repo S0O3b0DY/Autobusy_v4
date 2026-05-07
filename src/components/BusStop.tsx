@@ -16,6 +16,7 @@ import { BUS_STOPS_SEARCH_LAYER, BUS_STOPS_SEARCH_SOURCE } from "./StopSearch.ts
 
 // other
 import clsx from "clsx"
+import posthog from "posthog-js"
 
 
 
@@ -76,12 +77,10 @@ export default function BusStop({ routeStopsRef }: Props) {
     return () => clearInterval(timer)
   }, [fetchData])
 
-
   function handleManualReset() {
     setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
   }
-
 
   function handleSetSelectedVehicle(routeID: number): void {
     vehicles.forEach((veh) => {
@@ -101,25 +100,26 @@ export default function BusStop({ routeStopsRef }: Props) {
     })
   }
 
-  const addToFavorites = (id: number) => {
-    if (favoriteStops.includes(id)) {
-      setFavoriteStops(favoriteStops.filter(l => l !== id))
+  function addToFavorites(stop: BusStopData) {
+    if (favoriteStops.includes(stop.id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== stop.id))
+      posthog.capture("removed_stop_from_fav", { name: stop.n, id: stop.id })
     } else {
-      setFavoriteStops([...favoriteStops, id])
+      setFavoriteStops([...favoriteStops, stop.id])
+      posthog.capture("added_stop_to_fav", { name: stop.n, id: stop.id })
     }
   }
-
-  if (!selectedBusStop) return null
-
   
   function removeFromMap(stop: BusStopData | null) {
     // console.log(stop,routeStopsRef.current?.find(st => st.id === stop?.id)?.id,stop?.id , routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id)
     if (routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id) {
       // console.log("I do pieca")
       if (map?.getLayer(BUS_STOPS_SEARCH_LAYER))   map.removeLayer(BUS_STOPS_SEARCH_LAYER)
-      if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
-    }
+        if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
+        }
   }
+    
+  if (!selectedBusStop) return null
 
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
@@ -139,7 +139,7 @@ export default function BusStop({ routeStopsRef }: Props) {
             <RefreshCw size="sm" className={clsx("text-zinc-500", isRefreshing && "animate-spin")} />
           </button>
           <button 
-            onClick={() => { if(userLoggedIn) addToFavorites(selectedBusStop.id) }}
+            onClick={() => { if(userLoggedIn) addToFavorites(selectedBusStop) }}
             title={!userLoggedIn ? "Tylko zalogowani użytkownicy mają dostęp do tej funkcji." : ""}
             className={clsx(
               "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm cursor-pointer",

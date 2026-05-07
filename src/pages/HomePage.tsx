@@ -27,7 +27,7 @@ import maplibregl, { Map as MapLibreMap, Marker, type GeoJSONSource} from "mapli
 import { dbF } from '../lib/firebase.ts'
 import gsap from "gsap"
 import { doc, setDoc } from "firebase/firestore"
-
+import posthog from "posthog-js"
 
 
 
@@ -258,6 +258,7 @@ export default function App() {
           setSelectedVehicle(vehicle)
           createRoute(vehicle)
           setMenuState(4)
+          posthog.capture("clicked_on_vehicle", { line: vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum, destination: vehicle.dest ? vehicle.dest : vehicle.nextDest })
 
           map?.easeTo({
             center: [vehicle.lng, vehicle.lat],
@@ -338,6 +339,7 @@ export default function App() {
           setSelectedVehicle(vehicle)
           createRoute(vehicle)
           setMenuState(4)
+          posthog.capture("clicked_on_vehicle", { line: vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum, destination: vehicle.dest ? vehicle.dest : vehicle.nextDest })
 
           map?.easeTo({
             center: [vehicle.lng, vehicle.lat],
@@ -494,6 +496,8 @@ export default function App() {
       const stop: BusStopData = JSON.parse(feature.properties.stopJson)
       setSelectedBusStop(stop)
       setMenuState(3)
+
+      posthog.capture("clicked_on_bus_stop", { name: stop.n, id: stop.id })
     })
 
     setRouteBusStops(routeStopsRef.current || [])

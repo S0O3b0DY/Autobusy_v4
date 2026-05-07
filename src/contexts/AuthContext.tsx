@@ -1,8 +1,18 @@
+
+// hooks
 import { createContext, useContext, useEffect, useState } from "react"
+import { useAppStore } from "../lib/store"
+
+// components
+// types
+// constants
+// other
 import { onAuthStateChanged, getRedirectResult, browserPopupRedirectResolver } from "firebase/auth"
 import { auth, dbF } from '../lib/firebase.ts'
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"
-import { useAppStore } from "../lib/store"
+import posthog from "posthog-js"
+
+
 
 const AuthContext = createContext<any>(null)
 
@@ -35,6 +45,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const userRef = doc(dbF, "users", result.user.uid)
           const userSnap = await getDoc(userRef)
 
+          posthog.identify(user.uid, {
+            email: user.email ?? undefined,
+            name: user.displayName ?? undefined,
+            provider: user.providerData[0]?.providerId ?? 'unknown',
+            email_verified: user.emailVerified,
+            created_at: user.metadata.creationTime,
+          })
+
           if (!userSnap.exists()) {
             await setDoc(userRef, {
               uid: result.user.uid,
@@ -60,9 +78,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const fullUser = await loadUserData(fbUser)
           setUser(fullUser)
           setUserLoggedIn(true)
+
+          posthog.identify(user.uid, {
+            email: user.email ?? undefined,
+            name: user.displayName ?? undefined,
+            provider: user.providerData[0]?.providerId ?? 'unknown',
+            email_verified: user.emailVerified,
+            created_at: user.metadata.creationTime,
+          })
         } else {
           setUser(null)
           setUserLoggedIn(false)
+          
+          posthog.reset()
         }
         setLoading(false)
       })

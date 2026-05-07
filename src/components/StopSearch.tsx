@@ -17,6 +17,7 @@ import busStops from '../const/stops.ts'
 
 // other
 import { type GeoJSONSource } from "maplibre-gl"
+import posthog from "posthog-js"
 
 
 
@@ -86,7 +87,6 @@ export default function StopSearch({ routeStopsRef }: Props) {
     }
   }, [query])
   
-  // TODO: dac przystanek na oddzielna warstwe
   const handleSelect = (stop: BusStopData | undefined) => {
     if (!stop) return
 
@@ -168,25 +168,26 @@ export default function StopSearch({ routeStopsRef }: Props) {
         const stop: BusStopData = JSON.parse(feature.properties.stopJson)
         setSelectedBusStop(stop)
         setMenuState(3)
+
+        posthog.capture("clicked_on_bus_stop", { name: stop.n, id: stop.id })
       })
     }
       
     setSelectedBusStop(stop)
   }
 
-  const addToFavorites = (id: number) => {
-    if (favoriteStops.includes(id)) {
-      setFavoriteStops(favoriteStops.filter(l => l !== id))
+  function addToFavorites(stop: BusStopData | undefined) {
+    if (!stop) return
+
+    if (favoriteStops.includes(stop.id)) {
+      setFavoriteStops(favoriteStops.filter(l => l !== stop.id))
+      posthog.capture("removed_stop_from_fav", { name: stop.n, id: stop.id })
     } else {
-      setFavoriteStops([...favoriteStops, id])
+      setFavoriteStops([...favoriteStops, stop.id])
+      posthog.capture("added_stop_to_fav", { name: stop.n, id: stop.id })
     }
   }
 
-  function handleRemoveFromFav(e: any, stopID: number) {
-    e.stopPropagation()
-    addToFavorites(stopID)
-    
-  }
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
       
@@ -291,7 +292,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
               >
                 <div
                   className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors flex items-center justify-center flex-col cursor-pointer"
-                  onClick={(e) => handleRemoveFromFav(e, favStop)}
+                  onClick={(e) => addToFavorites(busStopsMap.get(favStop))}
                   role="button"
                 >
                   <Eraser size="sm" />
