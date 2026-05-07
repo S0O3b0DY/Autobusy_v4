@@ -1,8 +1,18 @@
 
+// hooks
 import { useState, useRef, useEffect } from 'react'
-import { Sun, Moon, ChevronDown, Check } from "@boxicons/react"
-import gsap from 'gsap'
 import { useTranslation } from 'react-i18next'
+
+// components
+import { Sun, Moon, ChevronDown, Check } from "@boxicons/react"
+
+// types
+// constants
+// other
+import gsap from 'gsap'
+
+
+
 
 interface ThemeToggleProps {
   isDark: boolean;

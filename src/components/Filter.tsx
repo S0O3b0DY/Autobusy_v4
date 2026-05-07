@@ -1,12 +1,20 @@
 
-import clsx from "clsx"
-import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
-import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
+// hooks
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
+import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
 import { useAuth } from "../contexts/AuthContext"
+
+// components
+import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
+
+// types
+// constants
+// other
+import clsx from "clsx"
 import { doc, setDoc } from "firebase/firestore"
 import { dbF } from '../lib/firebase.ts'
-import { useTranslation } from "react-i18next"
+
 
 
 export default function Filter() {

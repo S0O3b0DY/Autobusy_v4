@@ -1,13 +1,23 @@
 
+// hooks
 import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
-import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight, Star } from "@boxicons/react"
-import clsx from "clsx"
 import { useAppStore } from "../lib/store"
-import type { BusStopTimetable, BusStopData } from './../types/index.d.ts'
 import { useTranslation } from "react-i18next"
+import { useAuth } from "../contexts/AuthContext.tsx"
+
+// components
+import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight, Star } from "@boxicons/react"
+
+// types
+import type { BusStopTimetable, BusStopData } from './../types/index.d.ts'
+
+// constants
 import { BUS_STOPS_SEARCH_LAYER, BUS_STOPS_SEARCH_SOURCE } from "./StopSearch.tsx"
 
-const REFRESH = 30
+// other
+import clsx from "clsx"
+
+
 
 type Props = {
   routeStopsRef: RefObject<BusStopData[] | null>
@@ -17,6 +27,7 @@ export default function BusStop({ routeStopsRef }: Props) {
   const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle, shownLines,
     setShownLines, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
+  const { userLoggedIn } = useAuth()
 
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -47,7 +58,7 @@ export default function BusStop({ routeStopsRef }: Props) {
   }, [selectedBusStop])
 
   useEffect(() => {
-    setTimeLeft(REFRESH)
+    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
   }, [selectedBusStop])
 
@@ -56,7 +67,7 @@ export default function BusStop({ routeStopsRef }: Props) {
       setTimeLeft(prev => {
         if (prev <= 1) {
           fetchData()
-          return REFRESH
+          return import.meta.env.VITE_REFRESH_MENU
         }
         return prev - 1
       })
@@ -67,7 +78,7 @@ export default function BusStop({ routeStopsRef }: Props) {
 
 
   function handleManualReset() {
-    setTimeLeft(REFRESH)
+    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
   }
 
@@ -128,12 +139,14 @@ export default function BusStop({ routeStopsRef }: Props) {
             <RefreshCw size="sm" className={clsx("text-zinc-500", isRefreshing && "animate-spin")} />
           </button>
           <button 
-            onClick={() => { addToFavorites(selectedBusStop.id) }}
+            onClick={() => { if(userLoggedIn) addToFavorites(selectedBusStop.id) }}
+            title={!userLoggedIn ? "Tylko zalogowani użytkownicy mają dostęp do tej funkcji." : ""}
             className={clsx(
               "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm cursor-pointer",
               favoriteStops.includes(selectedBusStop.id) 
                 ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400" 
-                : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-400"
+                : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-400",
+              !userLoggedIn && "opacity-30"
             )}
           >
             {favoriteStops.includes(selectedBusStop.id) ? <Star pack="filled" size="sm"/> : <Star size="sm"/>}

@@ -1,9 +1,17 @@
 
+// hooks
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Check } from "@boxicons/react"
-import gsap from 'gsap'
 import { useTranslation } from 'react-i18next'
+
+// components
+import { ChevronDown, Check } from "@boxicons/react"
+
+// types
+// constants
 import { SUPPORTED_LANGUAGES } from '../const/lang'
+
+// other
+import gsap from 'gsap'
 
 
 

@@ -1,16 +1,26 @@
 
+// hooks
+import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
+import { useAuth } from "../contexts/AuthContext.tsx"
+import { useAppStore } from "../lib/store"
+import { useTranslation } from "react-i18next"
+
+// components
 import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route,
   Sigma, List, Check, InfoCircle, ListUl, Star } from "@boxicons/react"
-import { useAppStore } from "../lib/store"
-import clsx from "clsx"
-import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
+
+// types
 import type { BusStopData, VehicleTimetable } from './../types/index.d.ts'
+
+// constants
+import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/HomePage"
 import busStops from '../const/stops.ts'
 
+// other
+import clsx from "clsx"
+import { app } from './../lib/firebase.ts'
 import { getDatabase, ref, push, get } from "firebase/database"
-import { app }from './../lib/firebase.ts'
-import { useTranslation } from "react-i18next"
-import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/HomePage"
+
 
 
 interface Coords {
@@ -53,10 +63,10 @@ const getBearing = (prev: Coords, current: Coords): number => {
 
 export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const db = getDatabase(app)
-
   const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop,
     setRouteBusStops, setRoutePolyline, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
+  const { userLoggedIn } = useAuth()
 
   const [timeLeft, setTimeLeft] = useState(30)
   //@ts-ignore
@@ -91,7 +101,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
     }
     fetchType()
 
-    setTimeLeft(30)
+    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
 
     if (selectedVehicle?.sideNum !== selectedVehicleIdRef.current) {
@@ -120,7 +130,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
       setTimeLeft(prev => {
         if (prev <= 1) {
           fetchData()
-          return 30
+          return import.meta.env.VITE_REFRESH_MENU
         }
         return prev - 1
       })
@@ -145,7 +155,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
 
 
   function handleManualReset(): void {
-    setTimeLeft(30)
+    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
   }
 
@@ -369,7 +379,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                     </p>
                   </div>
 
-                  <button 
+                  {userLoggedIn && <button 
                     onClick={() => { addToFavorites(stop.busStopID) }}
                     className={clsx(
                       "transition-all active:scale-95 cursor-pointer rounded-sm",
@@ -379,7 +389,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                     )}
                   >
                     {favoriteStops.includes(stop.busStopID) ? <Star pack="filled" size="xs"/> : <Star size="xs"/>}
-                  </button>
+                  </button>}
                   
                   {/* Time */}
                   <div className="flex items-center gap-1.5">
@@ -437,7 +447,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>
                 
-                <span className="text-[13px] font-medium text-white dark:text-zinc-300">
+                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
                   {vehType===null ? (
                     <div className="mt-2">
                       <button

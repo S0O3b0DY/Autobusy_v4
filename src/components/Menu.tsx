@@ -1,13 +1,23 @@
+
+// hooks
 import React, { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { useAppStore } from "../lib/store"
-import gsap from "gsap"
 
+// components
 import Filter from './Filter'
 import StopSearch from './StopSearch'
 import BusStop from './BusStop'
 import Vehicle from './Vehicle'
 import Profile from './Profile'
+
+// types
 import type { BusStopData } from '../types'
+
+// constants
+// other
+import gsap from "gsap"
+
+
 
 type Props = {
   currentRouteIdRef: RefObject<number | null>,

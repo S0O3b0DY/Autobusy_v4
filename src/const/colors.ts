@@ -20,13 +20,13 @@ const VEHICLE_COLORS = {
   },
 
   dark: {
-    defaultBus: "#18295e",
+    defaultBus: "#222",
     selectedBus: "#084202",
-    busGroup: "#2a4aa3",
+    busGroup: "#448041",
 
-    defaultTram: "#7e2014",
+    defaultTram: "#913911",
     selectedTram: "#084202",
-    tramGroup: "#af4202",
+    tramGroup: "#a4935d",
   }
 }
 

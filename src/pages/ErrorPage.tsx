@@ -1,8 +1,16 @@
 
+// hooks
 import { useEffect, useRef } from 'react'
 import { useRouteError, isRouteErrorResponse } from 'react-router-dom'
-import { gsap } from 'gsap'
 import { useTranslation } from 'react-i18next'
+
+// components
+// types
+// constants
+// other
+import { gsap } from 'gsap'
+
+
 
 export default function ErrorPage() {
   const ref = useRef(null)

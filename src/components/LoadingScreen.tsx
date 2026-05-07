@@ -1,9 +1,16 @@
 
+// hooks
 import { useEffect, useRef } from 'react'
+
+// components
 import { Train } from "@boxicons/react"
+
+// types
+// constants
+// other
 import gsap from 'gsap'
 
-// Rejestrujemy wtyczkę CustomEase
+
 
 export default function TransportAppLoader() {
   const containerRef = useRef<HTMLDivElement>(null)

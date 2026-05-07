@@ -11,6 +11,9 @@ import './i18n/config.ts'
 posthog.init(import.meta.env.VITE_PUBLIC_POSTHOG_KEY, {
   api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
   person_profiles: 'identified_only',
+  loaded: (posthog) => {  
+    if (process.env.NODE_ENV === 'development') posthog.opt_out_capturing()  
+  } 
 })
 
 createRoot(document.getElementById('root')!).render(

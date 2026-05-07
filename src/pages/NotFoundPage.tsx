@@ -1,7 +1,15 @@
 
+// hooks
 import { useEffect, useRef } from 'react'
-import { gsap } from 'gsap'
 import { useTranslation } from 'react-i18next'
+
+// components
+// types
+// constants
+// other
+import { gsap } from 'gsap'
+
+
 
 export default function NotFoundPage() {
   const ref = useRef(null)

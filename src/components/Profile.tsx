@@ -1,13 +1,24 @@
+
+// hooks
+import { useTheme } from "../hooks/useTheme.ts"
+import { useTranslation } from "react-i18next"
 import { useLayoutEffect, useRef } from "react"
 import { useAppStore } from "../lib/store"
 import { useAuth } from '../contexts/AuthContext.tsx'
-import gsap from 'gsap'
+
+// components
 import { User, ArrowOutRightSquareHalf, UserCircle } from "@boxicons/react"
-import { doSignInWithPopup, doSignOut, doSignInWithRedirect } from './../lib/authService.ts'
-import { GoogleAuthProvider, FacebookAuthProvider, GithubAuthProvider, OAuthProvider } from "firebase/auth"
-import { useTranslation } from "react-i18next"
+
+// types
+// constants
 import { googleIcon, facebookIcon, githubIconLight, githubIconDark, microsoftIcon } from './../const/icons.ts'
-import { useTheme } from "../hooks/useTheme.ts"
+
+// other
+import gsap from 'gsap'
+import { GoogleAuthProvider, FacebookAuthProvider, GithubAuthProvider, OAuthProvider } from "firebase/auth"
+import { doSignInWithPopup, doSignOut, doSignInWithRedirect } from './../lib/authService.ts'
+
+
 
 export default function Profile() {
   const { userLoggedIn, user } = useAuth()

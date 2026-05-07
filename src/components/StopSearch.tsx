@@ -1,13 +1,24 @@
 
+
+// hooks
 import { useMemo, type RefObject } from "react"
-import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@boxicons/react"
-// @ts-ignore
-import { Map as MapLibreMap, Marker, type GeoJSONSource, GeoJSON } from "maplibre-gl"
-import { useAppStore } from "../lib/store.ts"
-import busStops from '../const/stops.ts'
-import type { BusStopData } from "../types/index"
-import { useTranslation } from "react-i18next"
 import { useAuth } from "../contexts/AuthContext.tsx"
+import { useTranslation } from "react-i18next"
+import { useAppStore } from "../lib/store.ts"
+
+// components
+import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@boxicons/react"
+
+// types
+import type { BusStopData } from "../types/"
+
+// constants
+import busStops from '../const/stops.ts'
+
+// other
+import { Map as MapLibreMap, Marker, type GeoJSONSource, GeoJSON } from "maplibre-gl"
+
+
 
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 export const BUS_STOPS_SEARCH_SOURCE = 'bus-stops-search'
@@ -179,7 +190,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
   return (
     <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden shadow-xl rounded-2xl border border-zinc-200/60 dark:border-zinc-800/60">
       
-      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+      <div className="flex flex-col-reverse md:flex-row flex-1 overflow-hidden">
         {/* LEWA STRONA - WYSZYKIWANIE */}
         <div className="flex-1 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
           {/* SEARCH INPUT SECTION */}
@@ -309,6 +320,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
                 <p className="text-[13px] font-medium italic">Brak zapisanych przystanków.</p>
               </div>}
           </div> : <p className="text-[13px] text-zinc-500 text-center dark:text-zinc-400">Tylko zalogowani użytkownicy mogą mieć dostęp do zapisanych przystanków.</p>}
+          <div className="h-px bg-zinc-300 dark:bg-zinc-800 w-full block md:hidden"></div>
         </div>
       </div>
       

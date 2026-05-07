@@ -1,29 +1,36 @@
 
+// hooks
 import { useEffect, useRef } from "react"
-//@ts-ignore
-import maplibregl, { Map as MapLibreMap, Marker} from "maplibre-gl"
-import gsap from "gsap"
-import { doc, setDoc } from "firebase/firestore"
+import { useTheme } from '../hooks/useTheme'
+import { useAppStore } from "../lib/store"
+import { useAuth } from '../contexts/AuthContext'
 
-import "maplibre-gl/dist/maplibre-gl.css"
-import { osmProviders } from '../lib/osmProviders'
-import stops from '../const/stops.ts'
+// components
 import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
 import LoadingScreen from './../components/LoadingScreen'
 import ChangeLang from './../components/ChangeLang'
 
+// types
 import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
-import { useTheme } from '../hooks/useTheme'
-import { useAppStore } from "../lib/store"
-import { useAuth } from '../contexts/AuthContext'
-import { dbF } from '../lib/firebase.ts'
-
-import { STOP_ICON_COLORS, VEHICLE_COLORS } from "../const/colors.ts"
 import type { StopIconType } from "../types"
-import type { GeoJSONSource } from "maplibre-gl"
-import { BUS_STOPS_SEARCH_LAYER } from "../components/StopSearch.tsx"
+
+// constants
+import stops from '../const/stops.ts'
+import { STOP_ICON_COLORS, VEHICLE_COLORS } from "../const/colors.ts"
+import { osmProviders } from '../lib/osmProviders'
+import "maplibre-gl/dist/maplibre-gl.css"
+
+// other
+import maplibregl, { Map as MapLibreMap, Marker, type GeoJSONSource} from "maplibre-gl"
+import { dbF } from '../lib/firebase.ts'
+import gsap from "gsap"
+import { doc, setDoc } from "firebase/firestore"
+
+
+
+
 
 
 const REFRESH = import.meta.env.VITE_REFRESH
@@ -65,7 +72,7 @@ export default function App() {
   useEffect(() => {
     if (map || !mapContainer.current) return
 
-    let mapInstance = new maplibregl.Map({
+    let mapInstance = new MapLibreMap({
       container: mapContainer.current,
       center: [19.49589069067231, 51.7323631400332],
       zoom: 11,
@@ -80,6 +87,7 @@ export default function App() {
     // })
 
     mapInstance.on("load", async () => {
+
       const dpr = window.devicePixelRatio || 1
       const types: StopIconType[] = ['default', 'selected', 'first', 'last']
       await Promise.all(
@@ -214,11 +222,6 @@ export default function App() {
         ? (isDark ? VEHICLE_COLORS.dark.defaultBus : VEHICLE_COLORS.light.defaultBus)
         : (isDark ? VEHICLE_COLORS.dark.defaultTram : VEHICLE_COLORS.light.defaultTram)
 
-      function cropLine(str: string | undefined): string {
-        if (/^[a-zA-Z]+$/.test(str || "") && str?.length===1) return str
-        return str ? str.replace(/[a-zA-Z]$/, "") : ""
-      }
-
       const cond1 = cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)
       const cond2 = selectedVehicle?.sideNum === vehicle.sideNum
 
@@ -249,7 +252,7 @@ export default function App() {
         const existingDelayCont = existingEl.querySelector("#delayCont")
         const existingSvg = existingEl.querySelector("#svg")
 
-        existingEl.style.zIndex = String((selectedVehicle?.sideNum === vehicle.sideNum) ? 10 : 1)
+        existingEl.style.zIndex = String(cond1 ? 10 : 1)
         existingEl.onclick = (e) => {
           e.stopPropagation()
           setSelectedVehicle(vehicle)
@@ -346,7 +349,7 @@ export default function App() {
         markersRef.current.set(vehicle.vehId, marker)
       }
     })
-  }, [vehicles, selectedVehicle, shownLines])
+  }, [vehicles, selectedVehicle, shownLines, isDark])
   
   // change stop icon color on map wether selectedBusStop changes
   useEffect(() => {
@@ -443,7 +446,6 @@ export default function App() {
       layout: { "line-join": "round", "line-cap": "round" },
       paint: { "line-color": "#ff5b03", "line-width": 4 }
     })
-    map?.moveLayer(BUS_STOPS_SEARCH_LAYER)
 
 
 
@@ -581,4 +583,9 @@ export function resolveIconType(stop: BusStopData, index: number, total: number,
   if (index === 0)            return 'first'
   if (index === total - 1)    return 'last'
   return 'default'
+}
+
+function cropLine(str: string | undefined): string {
+  if (/^[a-zA-Z]+$/.test(str || "") && str?.length===1) return str
+  return str ? str.replace(/[a-zA-Z]$/, "") : ""
 }

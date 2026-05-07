@@ -1,12 +1,18 @@
 
+// hooks
 import { useRef, useEffect, useCallback } from "react"
-import { SliderAlt, Search, GitCommit, Bus, UserCircle } from "@boxicons/react"
-import clsx from "clsx"
+import { useWindowSize } from "../hooks/useWindowSize"
 import { useAppStore } from "../lib/store"
 import { useAuth } from '../contexts/AuthContext.tsx'
 import { useTranslation } from 'react-i18next'
 
-import { useWindowSize } from "../hooks/useWindowSize"
+// components
+// types
+// constants
+import { SliderAlt, Search, GitCommit, Bus, UserCircle } from "@boxicons/react"
+
+// other
+import clsx from "clsx"
 
 const nearest = (snaps: number[], h: number) =>
   snaps.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a))
