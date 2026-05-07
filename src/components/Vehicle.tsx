@@ -6,8 +6,8 @@ import { useAppStore } from "../lib/store"
 import { useTranslation } from "react-i18next"
 
 // components
-import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route,
-  Sigma, List, Check, InfoCircle, ListUl, Star } from "@boxicons/react"
+import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Snowflake, MobileBackAlt2,
+  Sigma, List, Check, InfoCircle, ListUl, Star, InfoSquare, ArrowInDownSquareHalf, Cycling } from "@boxicons/react"
 
 // types
 import type { BusStopData, VehicleTimetable } from './../types/index.d.ts'
@@ -77,19 +77,19 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const selectedVehicleIdRef = useRef<number | null>(selectedVehicle?.sideNum)
   const selectRef = useRef<HTMLSelectElement>(null)
 
-  const [vehType, setVehType] = useState<string | null>(null) 
+  const [vehType, setVehType] = useState<{ number: string; type: string }[] | null>(null) 
   const [menuVehType, setMenuVehType] = useState<boolean>(false) 
 
   async function addBus(number: number, type: string) {
     await push(ref(db, `AUTOBUSY/${number}`), { number, type })
   }
 
-  async function getBusType(number: number): Promise<string | null> {
+  async function getBusType(number: number): Promise<{ number: string; type: string }[] | null> {
     const snapshot = await get(ref(db, `AUTOBUSY/${number}`))
     if (snapshot.exists()) {
       const entries = Object.values(snapshot.val()) as { number: string; type: string }[]
       // console.log(entries[0].type, number)
-      return entries[0].type
+      return entries
     }
     return null
   }
@@ -190,9 +190,10 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const bgColor = "bg-blue-500"
 
   const handleSubmit = () => {
-    console.log(selectRef.current?.value)
+    // console.log(selectRef.current?.value)
+    if (!selectRef.current?.value) return
     addBus(selectedVehicle.sideNum, selectRef.current?.value || "")
-    setVehType(selectRef.current?.value || "")
+    setVehType(prev => prev ? [...prev, { number: String(selectedVehicle.sideNum), type: selectRef.current?.value || "" }] : null)
     setMenuVehType(false)
   }
 
@@ -209,13 +210,23 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         
         {/* Header z informacją */}
         <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200/50 dark:border-zinc-800/50">
-          <div className="flex items-center gap-2 mb-1">
-            <InfoCircle size="xs" className="text-blue-500" />
-            <h3 className="text-[14px] font-bold text-zinc-800 dark:text-zinc-100">{t('vehicle.setType.title')}</h3>
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <div className="flex items-center gap-1 mb-1">
+                <InfoCircle size="xs" className="text-blue-500" />
+                <h3 className="text-[14px] font-bold text-zinc-800 dark:text-zinc-100">{t('vehicle.setType.title')}</h3>
+              </div>
+              <p className="text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                {t('vehicle.setType.description')}
+              </p>
+            </div>
+            <button 
+              onClick={() => {setMenuVehType(false)}}
+              className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm cursor-pointer"
+            >
+              <X size="sm" />
+            </button>
           </div>
-          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
-            {t('vehicle.setType.description')}
-          </p>
         </div>
 
         {/* Formularz */}
@@ -232,7 +243,8 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               
               <select 
                 ref={selectRef}
-                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 pl-10 pr-4 text-[14px] font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer text-zinc-700 dark:text-zinc-200"
+                className="w-full bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-2.5 pl-10 pr-4 text-[14px] font-medium
+                  appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer text-zinc-700 dark:text-zinc-200"
                 defaultValue=""
               >
                 <option value="" disabled hidden>{t('vehicle.setType.selectPlaceholder')}</option>
@@ -257,7 +269,10 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
           {/* Przycisk akcji */}
           <button
             onClick={handleSubmit}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 active:scale-[0.97] transition-all duration-150"
+            className={clsx("w-full flex items-center justify-center gap-2 bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/20 \
+              active:scale-[0.97] transition-all duration-150 hover:bg-blue-700 cursor-pointer",
+              !selectRef.current?.value && "opacity-40 dark:opacity-15 bg-zinc-700"
+            )}
           >
             <Check size="sm" />
             {t('vehicle.setType.apply')}
@@ -441,24 +456,37 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                 </span>
               </div>
             </div>
+            
+            <div className="flex items-start gap-3">
+              <InfoSquare size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">informacje</span>
+                <div className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300 flex gap-1.5 mt-1">
+                  {selectedVehicle.feat.split("").map((char) => {
+                    if (char === "N") return <ArrowInDownSquareHalf size="xs" />
+                    if (char === "K") return <Snowflake size="xs" />
+                    if (char === "B") return <MobileBackAlt2 size="xs" />
+                    if (char === "R") return <Cycling size="xs" />
+                  })}
+                </div>
+              </div>
+            </div>
 
             <div className="flex items-start gap-3 mb-10">
               <List size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>
-                
-                <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {vehType===null ? (
-                    <div className="mt-2">
-                      <button
-                        className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95 cursor-pointer"
-                        onClick={() => setMenuVehType(true)}
-                      >
-                        {t('vehicle.setType.buttonLabel')}
-                      </button>
-                    </div>
-                  ) : vehType}
-                </span>
+              <div className="flex flex-col gap-2">
+                <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>                
+                {vehType && <div className="flex flex-col gap-2 text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
+                  {vehType?.map((item, i) => <span className="block">{i+1}. {item.type}</span>)}
+                </div>}
+                <div>
+                  <button
+                    className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95 cursor-pointer text-xs font-bold text-zinc-300"
+                    onClick={() => setMenuVehType(true)}
+                  >
+                    {vehType ? "Popraw" : t('vehicle.setType.buttonLabel')}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

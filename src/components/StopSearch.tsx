@@ -16,7 +16,7 @@ import type { BusStopData } from "../types/"
 import busStops from '../const/stops.ts'
 
 // other
-import { Map as MapLibreMap, Marker, type GeoJSONSource, GeoJSON } from "maplibre-gl"
+import { type GeoJSONSource } from "maplibre-gl"
 
 
 
@@ -97,7 +97,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
       duration: 600,
     })
 
-    const geojson: GeoJSON = {
+    const geojson: any = {
       type: 'FeatureCollection',
       features: [
         {

@@ -7,7 +7,6 @@ const STOP_ICON_COLORS: Record<StopIconType, [string, string]> = {
   last:     ['rgb(224, 58, 41)',  'rgba(179,32,32,1)' ],
 }
 
-// TODO: kolorki
 const VEHICLE_COLORS = {
   light: {
     defaultBus: "#18295e",
