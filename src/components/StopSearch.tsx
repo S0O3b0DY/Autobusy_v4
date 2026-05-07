@@ -292,7 +292,7 @@ export default function StopSearch({ routeStopsRef }: Props) {
               >
                 <div
                   className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors flex items-center justify-center flex-col cursor-pointer"
-                  onClick={(e) => addToFavorites(busStopsMap.get(favStop))}
+                  onClick={() => addToFavorites(busStopsMap.get(favStop))}
                   role="button"
                 >
                   <Eraser size="sm" />
