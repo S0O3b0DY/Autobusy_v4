@@ -1,0 +1,63 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Manrope:wght@200..800&display=swap');
+
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+    font-family: 'Geist', sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* --- GLOBALNY IOS SCROLLBAR KILLER --- */
+
+/* 1. Wyłączamy paski dla Chrome, Safari, Edge i nowszych Oper */
+*::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* 2. Wyłączamy paski dla Firefoxa */
+* {
+  scrollbar-width: none !important;
+}
+
+/* 3. Wyłączamy paski dla starego Edge i IE */
+* {
+  -ms-overflow-style: none !important;
+}
+
+/* 4. Dodatkowa optymalizacja pod mobile (smooth scrolling) */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+/* 
+.maplibregl-ctrl-group {
+  background: #f00 !important;
+} */
+
+@layer base {
+  :root {
+    --font-sans: 'Geist', sans-serif;
+    --font-mono: 'Geist Mono', monospace;
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    @apply bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100;
+  }
+
+  .maplibregl-ctrl-group {
+    @apply dark:bg-zinc-900! mt-4! mr-4! h-9! w-9! flex! items-center! justify-center! rounded-full!
+  }
+
+  .maplibregl-ctrl-icon {
+    @apply dark:bg-[url(/public/compass_icons_dark.svg)]! dark:bg-size-[10px]
+  }
+}
