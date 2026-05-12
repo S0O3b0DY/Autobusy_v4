@@ -1,0 +1,23 @@
+name = "v2"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+
+[triggers]
+crons = ["0 3 * * *"]
+
+[[kv_namespaces]]
+binding = "KV"
+id = "566ed927a55540fa8ca2bc5f3f28dc26"
+
+[[durable_objects.bindings]]
+name = "GTFS_PROCESSOR"
+class_name = "GtfsProcessor"
+script_name = "v2"
+
+[vars]
+GTFS_URL = "https://otwarte.miasto.lodz.pl/wp-content/uploads/2025/06/GTFS.zip"
+ARCHIVE_API_SECRET = "UKJZzsZICF2T"
+
+[observability.logs]
+enabled = true
+invocation_logs = true
