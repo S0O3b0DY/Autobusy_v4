@@ -2,6 +2,9 @@ import * as fflate from 'fflate';
 import { buildStopsJson } from './stops';
 import { buildTimetable  } from './timetable';
 import { shrinkCsv } from './parser';
+import { GtfsProcessor } from './gtfs-processor';
+
+export { GtfsProcessor };
 
 export interface Env {
   KV:              KVNamespace;
@@ -124,7 +127,7 @@ export default {
     }
 
     // ===== FETCH UPSTREAM =====
-    const targetDate = new Date(2019, 9, 28);
+    const targetDate = new Date(2019, 10, 27);
     const age = String(Math.floor((Date.now() - targetDate.getTime()) / (1000 * 60 * 60 * 24)));
     console.log(age);
 
@@ -333,6 +336,18 @@ async function parseVehicleList(dataString: string) {
 // ===== GTFS PROCESSING =====
 //
 
+function uint8ArrayToBase64Chunked(data: Uint8Array): string {
+  let binaryString = '';
+  const chunkSize = 8192; // Przetwarzaj po 8KB, żeby uniknąć stack overflow
+  
+  for (let i = 0; i < data.length; i += chunkSize) {
+    const chunk = data.slice(i, i + chunkSize);
+    binaryString += String.fromCharCode(...Array.from(chunk));
+  }
+  
+  return btoa(binaryString);
+}
+
 async function parseMultipartResponse(response: Response): Promise<Record<string, Uint8Array>> {
   const contentType = response.headers.get('content-type') || '';
   const boundaryMatch = contentType.match(/boundary="?([^";\s]+)"?/);
@@ -416,8 +431,7 @@ async function refreshGtfs(env: Env) {
   // Kodujemy pliki do base64 (DA się przesłać przez JSON)
   const encodedFiles: Record<string, string> = {};
   for (const [name, data] of Object.entries(files)) {
-    const binaryString = String.fromCharCode.apply(null, Array.from(data) as any);
-    encodedFiles[name] = btoa(binaryString);
+    encodedFiles[name] = uint8ArrayToBase64Chunked(data);
   }
 
   // Wysyłamy do Durable Object (ma większy limit CPU)
