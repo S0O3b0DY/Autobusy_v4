@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "npm run build && firebase deploy --only hosting:autobusy"
+    "deploy": "node copyright.js && npm run build && firebase deploy --only hosting:autobusy"
   },
   "dependencies": {
     "@boxicons/react": "^1.0.3",

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 // hooks
 import { useEffect, useRef } from 'react'

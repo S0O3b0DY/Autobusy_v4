@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 import { useState, useEffect } from "react"
 

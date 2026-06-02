@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
+
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'

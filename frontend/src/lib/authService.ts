@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
+
 import { signInWithPopup, signInWithRedirect, browserPopupRedirectResolver } from "firebase/auth"
 import { auth, dbF } from "./firebase"
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore"

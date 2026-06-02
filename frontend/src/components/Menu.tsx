@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 // hooks
 import React, { useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'

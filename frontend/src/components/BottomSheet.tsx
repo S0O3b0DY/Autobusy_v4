@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 // hooks
 import { useRef, useEffect, useCallback } from "react"
@@ -164,6 +166,10 @@ export default function BottomSheet({ children, title }: Props) {
   }, [onDown, onMove, onUp])
 
   useEffect(() => {
+    if (contentRef.current) {
+      console.log("zdsadas")
+      contentRef.current.scrollTop = 0
+    }
     const snaps = snapsRef.current
     if (menuState !== 0) setHeight(snaps[1], true)
     if (menuState === 0) setHeight(snaps[0], true)

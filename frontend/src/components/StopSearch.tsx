@@ -1,4 +1,5 @@
-
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 // hooks
 import { useMemo, type RefObject } from "react"
@@ -206,7 +207,6 @@ export default function StopSearch({ routeStopsRef }: Props) {
                 placeholder={t('stopSearch.placeholder')}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                autoFocus
               />
               {query && (
                 <button 

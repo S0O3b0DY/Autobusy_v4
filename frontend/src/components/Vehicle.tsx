@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 // hooks
 import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
@@ -349,7 +351,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         
         {/* LEWA STRONA: OŚ CZASU TRASY */}
         <div className="flex-1 flex flex-col min-w-0 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
+          <div className="flex-1 custom-scrollbar p-2 space-y-1 overflow-hidden">
             {!stops && <p className="text-center mt-2 text-sm text-zinc-500">{t('vehicle.loading')}</p>}
 
             {stops && stops.dep.map((stop) => {
@@ -372,7 +374,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                 <div
                   key={stop.busStopID}
                   className={clsx(
-                    "group flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer hover:ring hover:ring-white/50",
+                    "group flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer hover:ring hover:ring-zinc-400/50 dark:hover:ring-zinc-600/50",
                     isLive ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
                   )}
                   onClick={() => {handleSetSelectedBusStop(stop.busStopID)}}

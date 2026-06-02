@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
+
 import type { LangsList } from './../types/index'
 
 export const SUPPORTED_LANGUAGES = {

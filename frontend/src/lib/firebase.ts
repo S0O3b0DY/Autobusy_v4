@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Szymon Piera. All rights reserved.
+// Wszelkie prawa zastrzeżone.
 
 import { initializeApp } from "firebase/app"
 import { getAuth, browserPopupRedirectResolver, browserLocalPersistence, setPersistence } from "firebase/auth"
