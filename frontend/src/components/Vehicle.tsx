@@ -261,9 +261,9 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                 <option value="Standardowy - Solaris (najnowszy)">{t('vehicle.setType.types.standard_solaris_new')}</option>
                 <option value="Standardowy - Solaris">{t('vehicle.setType.types.standard_solaris')}</option>
                 <option value="Standardowy - Mercedes">{t('vehicle.setType.types.standard_mercedes')}</option>
-                <option value="Przegłubowy - Solaris (najnowszy)">{t('vehicle.setType.types.articulated_solaris_new')}</option>
-                <option value="Przegłubowy - Solaris">{t('vehicle.setType.types.articulated_solaris')}</option>
-                <option value="Przegłubowy - Mercedes">{t('vehicle.setType.types.articulated_mercedes')}</option>
+                <option value="Przegubowy - Solaris (najnowszy)">{t('vehicle.setType.types.articulated_solaris_new')}</option>
+                <option value="Przegubowy - Solaris">{t('vehicle.setType.types.articulated_solaris')}</option>
+                <option value="Przegubowy - Mercedes">{t('vehicle.setType.types.articulated_mercedes')}</option>
               </select>
 
               {/* Własna strzałka dla selecta */}

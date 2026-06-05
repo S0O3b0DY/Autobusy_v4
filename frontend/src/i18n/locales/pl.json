@@ -101,9 +101,9 @@
         "standard_solaris_new": "Standardowy - Solaris (najnowszy)",
         "standard_solaris": "Standardowy - Solaris",
         "standard_mercedes": "Standardowy - Mercedes",
-        "articulated_solaris_new": "Przegłubowy - Solaris (najnowszy)",
-        "articulated_solaris": "Przegłubowy - Solaris",
-        "articulated_mercedes": "Przegłubowy - Mercedes"
+        "articulated_solaris_new": "Przegubowy - Solaris (najnowszy)",
+        "articulated_solaris": "Przegubowy - Solaris",
+        "articulated_mercedes": "Przegubowy - Mercedes"
       }
     },
     "departure": {

@@ -30,6 +30,7 @@ import { dbF } from '../lib/firebase.ts'
 import gsap from "gsap"
 import { doc, setDoc } from "firebase/firestore"
 import posthog from "posthog-js"
+import { Link } from "react-router-dom"
 
 
 
@@ -286,9 +287,9 @@ export default function App() {
         if(existingLineNum) existingLineNum.textContent = vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum
         if(existingDelayCont) existingDelayCont.innerHTML = `
           ${vehicle.timeToDep === 0 ? `
-              <i class='bx bx-up-arrow-alt' style="color:${vehicle.delay < 0 ? "#0f0" : "#f00"}; font-size:1rem;"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;"><path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path></svg>
             ` : `
-              <i class='bx bx-stopwatch' style="font-size:.9rem; color:#fff;"></i>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path></svg>
             `}
           <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
         `
@@ -308,7 +309,10 @@ export default function App() {
             </div>
             <div style="position: absolute; width:100%; height:42px; bottom:18px; display:flex; flex-direction:column; justify-content: space-between; padding: 4px 6px;">
               <div style="height:15px; display:flex; justify-content: space-between; align-items: start;">
-                ${isBus ? `<i class='bx bxs-bus' style="font-size: 1.05rem; color: #fff;"></i>` : `<i class='bx bxs-train' style="font-size: 1.2rem; color: #fff;"></i>`}
+                ${isBus ? (
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M21 6.021c.003-.146-.007-1.465-1.3-2.735C18.427 2.036 17.143 2 17 2H6.996c-.239 0-1.493.063-2.708 1.302C3.036 4.578 3 5.859 3 6v3H2v3h1v6c0 .734.406 1.373 1 1.721V21a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h10v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.277A1.99 1.99 0 0 0 21 18v-6h1V9h-1V6.021zM9 4h6v2H9V4zM6.5 18a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 6.5 18zm4.5-5H5V8h6v5zm6.5 5a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 17.5 18zm1.5-5h-6V8h6v5z"></path></svg>`)
+                  : (`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M16.375 2H7.621c-.224 0-1.399.065-2.503 1.351C4.031 4.616 4 5.862 4 6v11a2 2 0 0 0 2 2h1l-2 3h2.353l.667-1h8l.677 1H19l-2-3h1a2 2 0 0 0 2-2V6c.001-.188-.032-1.434-1.129-2.665C17.715 2.037 16.509 2 16.375 2zM10 4h4v2h-4V4zM7.5 17a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 7.5 17zm9 0a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 16.5 17zm1.5-5H6V8h12v4z"></path></svg>`)
+                }
                 <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px; letter-spacing: -1px" >
                   ${vehicle.sideNum}
                 </p>
@@ -318,9 +322,9 @@ export default function App() {
               </div>
               <div id="delayCont" style="height:15px; display:flex; justify-content: space-between; align-items: center;">
                 ${vehicle.timeToDep === 0 ? `
-                    <i class='bx bx-up-arrow-alt' style="color:${vehicle.delay > 0 ? "#0f0" : "#f00"}; font-size:1rem;"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;"><path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path></svg>
                   ` : `
-                    <i class='bx bx-stopwatch' style="font-size:.9rem; color:#fff;"></i>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path></svg>
                   `}
                 <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
               </div>
@@ -544,7 +548,72 @@ export default function App() {
           text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
       </div>
 
-      <div ref={mapContainer} className="w-full h-dvh" />
+      <div ref={mapContainer} className="w-full h-[90vh]" />
+      
+      <section className="w-full px-6 py-12 bg-white border-t border-gray-200">
+        <div className="max-w-3xl mx-auto">
+          
+          <h1 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            Live Mapa Komunikacji Miejskiej – Rozkład Jazdy na Żywo
+          </h1>
+          
+          <p className="text-base text-gray-600 leading-relaxed mb-8">
+            Witaj w nowoczesnym systemie monitorowania pojazdów transportu publicznego. Nasza aplikacja umożliwia śledzenie pozycji autobusów oraz tramwajów w czasie rzeczywistym bezpośrednio na interaktywnej mapie. Dzięki integracji z systemami GPS pojazdów oraz otwartymi danymi miejskimi (GTFS-RT), pasażerowie mogą sprawdzić rzeczywisty czas przyjazdu środka transportu na konkretny przystanek.
+          </p>
+          
+          <h2 className="text-xl font-bold text-gray-800 mb-3">
+            Najważniejsze funkcje aplikacji:
+          </h2>
+          
+          <ul className="list-disc list-inside space-y-2 text-gray-600 mb-8 pl-2">
+            <li><strong className="text-gray-900">Lokalizacja pojazdów na żywo:</strong> Sprawdź, gdzie dokładnie na mapie znajduje się Twój autobus lub tramwaj.</li>
+            <li><strong className="text-gray-900">Wirtualna tablica przystankowa:</strong> Kliknij w ikonę przystanku, aby zobaczyć najbliższe odjazdy i pełny rozkład jazdy.</li>
+            <li><strong className="text-gray-900">Zapisywanie ulubionych:</strong> Zaloguj się bezpiecznie przez OAuth (Google/Facebook), aby zapisać swoje codzienne linie i mieć do nich szybki dostęp.</li>
+            <li><strong className="text-gray-900">Inteligentna wyszukiwarka:</strong> Łatwo znajdź interesujący Cię przystanek, ulicę lub konkretny numer linii komunikacyjnej.</li>
+          </ul>
+
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Najczęściej zadawane pytania (FAQ):
+          </h2>
+          
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">1. Jak działa śledzenie autobusów na żywo?</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Pojazdy komunikacji miejskiej wyposażone są w nadajniki GPS, które co kilkanaście sekund wysyłają swoją pozycję do centralnego systemu. Nasza aplikacja przetwarza te dane i nanosi aktualne pozycje pojazdów na mapę, dzięki czemu wiesz, czy Twój transport spóźni się z powodu korków.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">2. Dlaczego warto zalogować się przez OAuth?</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Logowanie za pomocą konta Google lub Facebook (protokół OAuth) pozwala w bezpieczny sposób przechowywać Twoje ustawienia w chmurze. Dzięki temu na każdym urządzeniu masz dostęp do swoich ulubionych przystanków i linii autobusowych bez konieczności ponownego ich szukania.
+              </p>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">3. Co zrobić, gdy pojazd nie wyświetla się na mapie?</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Czasami z przyczyn technicznych (np. awaria nadajnika GPS w starym modelu tramwaju lub brak zasięgu) pojazd może tymczasowo nie wysyłać swojej pozycji. W takim przypadku aplikacja wyświetla czas odjazdu na podstawie standardowego, teoretycznego rozkładu jazdy.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <footer className="w-full bg-gray-900 text-gray-400 py-6 text-center text-sm mt-auto pb-30">
+        <p className="mb-2">&copy; 2026 Szymon Piera. Wszelkie prawa zastrzeżone.</p>
+        <div className="space-x-4">
+          <Link to="/spis-linii" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+            Spis Linii i Rozkłady
+          </Link>
+          <span className="text-gray-600">|</span>
+          <Link to="/polityka-prywatnosci" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
+            Polityka Prywatności
+          </Link>
+        </div>
+      </footer>
     </div>
   )
 }

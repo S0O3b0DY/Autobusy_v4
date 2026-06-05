@@ -1,6 +1,26 @@
 {
   "rules": {
-    ".read": true,
-    ".write": true
+    "AUTOBUSY": {
+      ".read": true, 
+      
+      "$numer_boczny": {
+        
+        "$id_wpisu": {
+          ".write": "!data.exists() && newData.exists()",
+          
+          "number": {
+            ".validate": "newData.isNumber() && newData.val() >= 1000 && newData.val() <= 9999"
+          },
+          
+          "type": {
+            ".validate": "newData.isString() && (newData.val() == 'Krótki - Isuzu' || newData.val() == 'Standardowy - Solaris (najnowszy)' || newData.val() == 'Standardowy - Solaris' || newData.val() == 'Standardowy - Mercedes' || newData.val() == 'Przegubowy - Solaris (najnowszy)' || newData.val() == 'Przegubowy - Solaris' || newData.val() == 'Przegubowy - Mercedes')"
+          },
+
+          "$other": { 
+            ".validate": false 
+          }
+        }
+      }
+    }
   }
 }
