@@ -30,7 +30,7 @@ import { dbF } from '../lib/firebase.ts'
 import gsap from "gsap"
 import { doc, setDoc } from "firebase/firestore"
 import posthog from "posthog-js"
-import { Link, Navigate } from "react-router-dom"
+import { Navigate } from "react-router-dom"
 
 
 
