@@ -15,7 +15,7 @@ import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Sn
 import type { BusStopData, VehicleTimetable } from './../types/index.d.ts'
 
 // constants
-import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/HomePage"
+import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/App"
 import busStops from '../const/stops.ts'
 
 // other

@@ -13,6 +13,7 @@
   "dependencies": {
     "@boxicons/react": "^1.0.3",
     "@gsap/react": "^2.1.2",
+    "@hashintel/refractive": "^0.0.4",
     "@tailwindcss/vite": "^4.2.2",
     "clsx": "^2.1.1",
     "firebase": "^12.11.0",
