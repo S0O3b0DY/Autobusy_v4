@@ -60,16 +60,15 @@ export default function App() {
   useEffect(() => {
     const fetchFunc = async () => {
       const token = await getUserJWTToken();
-      const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:stops`);
-      return await res.json();
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:stops`)
+      return await res.json()
     }
 
-    const stopsData: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
+    const stopsData: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") ?? "{}")
 
-    if (!stopsData || Math.floor(Date.now() / 1000) - stopsData.meta > 86400) {
+    if ((!stopsData.data || Math.floor(Date.now() / 1000) - stopsData.meta > 86400) && userLoggedIn ) {
       fetchFunc()
         .then((actualData) => {
-          console.log("Pobrane dane:", actualData);
           
           localStorage.setItem(
             "stops", 

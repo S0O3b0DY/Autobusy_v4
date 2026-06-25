@@ -41,7 +41,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Najpierw obsłuż redirect ZANIM odpali onAuthStateChanged
       try {
         const result = await getRedirectResult(auth, browserPopupRedirectResolver)
-        console.log(result)
         if (result?.user) {
           // Użytkownik wrócił z redirect – zapisz/zaktualizuj Firestore
           const userRef = doc(dbF, "users", result.user.uid)

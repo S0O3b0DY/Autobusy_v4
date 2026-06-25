@@ -14,15 +14,31 @@ import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@box
 import type { BusStopData, LocalStorageBusStopsData } from "../types/"
 
 // constants
+import * as BSD from './../const/stops.ts'
 // other
 import { type GeoJSONSource } from "maplibre-gl"
 import posthog from "posthog-js"
 
 
 
-
-const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
-const busStops = BUS_STOPS_DATA.data
+let busStops: BusStopData[] = []
+try {
+  const rawStops = localStorage.getItem("stops")
+  if (rawStops) {
+    const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(rawStops)
+    
+    if (BUS_STOPS_DATA && Array.isArray(BUS_STOPS_DATA.data)) {
+      busStops = BUS_STOPS_DATA.data
+    } else {
+      // throw new Error("Wadliwa struktura danych w localStorage")
+    }
+  } else {
+    busStops = BSD.default
+  }
+} catch (err) {
+  console.warn("Wykryto uszkodzone dane przystanków w localStorage, ładowanie fallbacku.")
+  busStops = BSD.default
+}
 
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 export const BUS_STOPS_SEARCH_SOURCE = 'bus-stops-search'
@@ -143,7 +159,6 @@ export default function StopSearch({ routeStopsRef }: Props) {
 
       // LAYER
       if (!map?.getLayer(BUS_STOPS_SEARCH_LAYER)) {
-        console.log("dodano layer")
         map?.addLayer({
           id:     BUS_STOPS_SEARCH_LAYER,
           type:   'symbol',

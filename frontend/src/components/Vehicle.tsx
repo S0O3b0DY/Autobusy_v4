@@ -15,6 +15,7 @@ import type { BusStopData, VehicleTimetable, LocalStorageBusStopsData } from './
 
 // constants
 import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/App"
+import * as BSD from './../const/stops.ts'
 
 // other
 import clsx from "clsx"
@@ -39,8 +40,24 @@ const addTime = (hours = 0, minutes = 0, seconds = 0) => {
   return date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
 }
 
-const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
-const busStops = BUS_STOPS_DATA.data
+let busStops: BusStopData[] = []
+try {
+  const rawStops = localStorage.getItem("stops")
+  if (rawStops) {
+    const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(rawStops)
+    
+    if (BUS_STOPS_DATA && Array.isArray(BUS_STOPS_DATA.data)) {
+      busStops = BUS_STOPS_DATA.data
+    } else {
+      // throw new Error("Wadliwa struktura danych w localStorage")
+    }
+  } else {
+    busStops = BSD.default
+  }
+} catch (err) {
+  console.warn("Wykryto uszkodzone dane przystanków w localStorage, ładowanie fallbacku.")
+  busStops = BSD.default
+}
 
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 

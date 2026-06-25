@@ -13,11 +13,9 @@ export async function getUserJWTToken() {
       const token = await firebaseUser.getIdToken(true)
       return token
     } else {
-      console.log("Brak zalogowanego użytkownika w module Firebase Auth.")
       return null
     }
   } catch (error) {
-    console.error("Błąd podczas pobierania tokenu:")
     return null
   }
 }
