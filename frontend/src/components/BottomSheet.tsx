@@ -167,7 +167,6 @@ export default function BottomSheet({ children, title }: Props) {
 
   useEffect(() => {
     if (contentRef.current) {
-      console.log("zdsadas")
       contentRef.current.scrollTop = 0
     }
     const snaps = snapsRef.current

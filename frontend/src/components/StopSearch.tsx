@@ -11,16 +11,18 @@ import { useAppStore } from "../lib/store.ts"
 import { X, Search, PinAlt, ChevronRight, InfoCircle, Trash, Eraser } from "@boxicons/react"
 
 // types
-import type { BusStopData } from "../types/"
+import type { BusStopData, LocalStorageBusStopsData } from "../types/"
 
 // constants
-import busStops from '../const/stops.ts'
-
 // other
 import { type GeoJSONSource } from "maplibre-gl"
 import posthog from "posthog-js"
 
 
+
+
+const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
+const busStops = BUS_STOPS_DATA.data
 
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 export const BUS_STOPS_SEARCH_SOURCE = 'bus-stops-search'

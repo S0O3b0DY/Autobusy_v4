@@ -19,6 +19,7 @@ import { BUS_STOPS_SEARCH_LAYER, BUS_STOPS_SEARCH_SOURCE } from "./StopSearch.ts
 // other
 import clsx from "clsx"
 import posthog from "posthog-js"
+import { getUserJWTToken } from "../utils/index.ts"
 
 
 
@@ -50,7 +51,7 @@ export default function BusStop({ routeStopsRef }: Props) {
     setIsRefreshing(true)
 
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL_BUS_STOP + selectedBusStop.id)
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:stop/${selectedBusStop.id}`) // import.meta.env.VITE_API_URL_BUS_STOP + selectedBusStop.id
       const data = await res.json()
       setDepartures(data)
     } catch (e) {
@@ -86,9 +87,9 @@ export default function BusStop({ routeStopsRef }: Props) {
 
   function handleSetSelectedVehicle(routeID: number): void {
     vehicles.forEach((veh) => {
-      if (veh.routeId === routeID || veh.nextRouteId === routeID) {
-        if (!shownLines.includes(veh.lineNum ? veh.lineNum : veh.nextLineNum)) {
-          setShownLines([ ...shownLines, veh.lineNum ? veh.lineNum : veh.nextLineNum ])
+      if (veh.routeId === routeID) {
+        if (!shownLines.includes(veh.lineNum)) {
+          setShownLines([ ...shownLines, veh.lineNum])
         }
 
         setSelectedVehicle(veh)
@@ -113,12 +114,10 @@ export default function BusStop({ routeStopsRef }: Props) {
   }
   
   function removeFromMap(stop: BusStopData | null) {
-    // console.log(stop,routeStopsRef.current?.find(st => st.id === stop?.id)?.id,stop?.id , routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id)
     if (routeStopsRef.current?.find(st => st.id === stop?.id)?.id !== stop?.id) {
-      // console.log("I do pieca")
-      if (map?.getLayer(BUS_STOPS_SEARCH_LAYER))   map.removeLayer(BUS_STOPS_SEARCH_LAYER)
-        if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
-        }
+      if (map?.getLayer(BUS_STOPS_SEARCH_LAYER)) map.removeLayer(BUS_STOPS_SEARCH_LAYER)
+      if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
+    }
   }
     
   if (!selectedBusStop) return null

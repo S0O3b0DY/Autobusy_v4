@@ -8,28 +8,23 @@ import { useAppStore } from "../lib/store"
 import { useTranslation } from "react-i18next"
 
 // components
-import { X, RefreshCw, NavigationNorth, ChevronRight, Circle, Hashtag, Route, Snowflake, MobileBackAlt2,
-  Sigma, List, Check, InfoCircle, ListUl, Star, InfoSquare, ArrowInDownSquareHalf, Cycling } from "@boxicons/react"
+import { X, RefreshCw, ChevronRight, Circle, Hashtag, Route, Sigma, List, Check, InfoCircle, ListUl, Star } from "@boxicons/react"
 
 // types
-import type { BusStopData, VehicleTimetable } from './../types/index.d.ts'
+import type { BusStopData, VehicleTimetable, LocalStorageBusStopsData } from './../types/index.d.ts'
 
 // constants
 import { BUS_STOPS_SOURCE, BUS_STOPS_LAYER } from "../pages/App"
-import busStops from '../const/stops.ts'
 
 // other
 import clsx from "clsx"
 import { app } from './../lib/firebase.ts'
 import { getDatabase, ref, push, get } from "firebase/database"
 import posthog from "posthog-js"
+import { getUserJWTToken } from "../utils/index.ts"
 
 
 
-interface Coords {
-  lat: number
-  lng: number
-}
 
 type Props = {
   currentRouteIdRef: RefObject<number | null>
@@ -44,25 +39,8 @@ const addTime = (hours = 0, minutes = 0, seconds = 0) => {
   return date.toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })
 }
 
-const getBearing = (prev: Coords, current: Coords): number => {
-  // Konwersja na radiany
-  const toRad = (deg: number) => (deg * Math.PI) / 180
-  const toDeg = (rad: number) => (rad * 180) / Math.PI
-
-  const lat1 = toRad(prev.lat)
-  const lat2 = toRad(current.lat)
-  const dLng = toRad(current.lng - prev.lng)
-
-  const y = Math.sin(dLng) * Math.cos(lat2)
-  const x =
-    Math.cos(lat1) * Math.sin(lat2) -
-    Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLng)
-
-  let bearing = toDeg(Math.atan2(y, x))
-
-  // Normalizacja do zakresu 0-360°
-  return (bearing + 360) % 360
-}
+const BUS_STOPS_DATA: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
+const busStops = BUS_STOPS_DATA.data
 
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 
@@ -77,9 +55,8 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   //@ts-ignore
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [stops, setStops] = useState<VehicleTimetable | null>(null)
-  const [follow, setFollow] = useState<boolean>(false)
 
-  const selectedVehicleIdRef = useRef<number | null>(selectedVehicle?.sideNum)
+  const selectedVehicleIdRef = useRef<number | null>(selectedVehicle?.vehId)
   const selectRef = useRef<HTMLSelectElement>(null)
 
   const [vehType, setVehType] = useState<{ number: string; type: string }[] | null>(null) 
@@ -93,7 +70,6 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
     const snapshot = await get(ref(db, `AUTOBUSY/${number}`))
     if (snapshot.exists()) {
       const entries = Object.values(snapshot.val()) as { number: string; type: string }[]
-      // console.log(entries[0].type, number)
       return entries
     }
     return null
@@ -101,7 +77,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
 
   useEffect(() => {
     async function fetchType() {
-      const type = await getBusType(selectedVehicle?.sideNum || 0)
+      const type = await getBusType(selectedVehicle?.vehId || 0)
       setVehType(type) // ustawiasz już rozwiązaną wartość
     }
     fetchType()
@@ -109,8 +85,8 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
     setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
     fetchData()
 
-    if (selectedVehicle?.sideNum !== selectedVehicleIdRef.current) {
-      selectedVehicleIdRef.current = selectedVehicle?.sideNum
+    if (selectedVehicle?.vehId !== selectedVehicleIdRef.current) {
+      selectedVehicleIdRef.current = selectedVehicle?.vehId
       setStops(null)
     }
   }, [selectedVehicle])
@@ -120,7 +96,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
     setIsRefreshing(true)
 
     try {
-      const res = await fetch(import.meta.env.VITE_API_URL_VEHICLES + "/" + selectedVehicle?.sideNum + "/next-stops")
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:vehicles/${selectedVehicle.vehId}/next_stops`) // import.meta.env.VITE_API_URL_VEHICLES + "/" + selectedVehicle?.vehId + "/next-stops"
       const data = await res.json()
       setStops(data)
     } catch (e) {
@@ -143,20 +119,6 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
 
     return () => clearInterval(timer)
   }, [fetchData])
-
-  useEffect(() => {
-    if (!follow) return
-    
-    map?.easeTo({
-      center: [selectedVehicle?.lng || 0, selectedVehicle?.lat || 0],
-      offset: [0, -150],
-      bearing: getBearing({lat: selectedVehicle?.prevLat || 0, lng: selectedVehicle?.prevLng || 0}, {lat: selectedVehicle?.lat || 0, lng: selectedVehicle?.lng || 0}),           // rotacja w stopniach (0 = północ)
-      pitch: 80,
-      zoom: 16,
-      duration: 1000,
-    })
-    
-  }, [follow, selectedVehicle])
 
 
   function handleManualReset(): void {
@@ -197,8 +159,8 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const handleSubmit = () => {
     // console.log(selectRef.current?.value)
     if (!selectRef.current?.value) return
-    addBus(selectedVehicle.sideNum, selectRef.current?.value || "")
-    setVehType(prev => prev ? [...prev, { number: String(selectedVehicle.sideNum), type: selectRef.current?.value || "" }] : null)
+    addBus(selectedVehicle.vehId, selectRef.current?.value || "")
+    setVehType(prev => prev ? [...prev, { number: String(selectedVehicle.vehId), type: selectRef.current?.value || "" }] : null)
     setMenuVehType(false)
   }
 
@@ -304,11 +266,11 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
       <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="flex items-center gap-3 min-w-0">
           <div className={`px-2 py-1 rounded-md ${bgColor} text-white text-[14px] font-black tracking-tighter shadow-sm`}>
-            {selectedVehicle.lineNum || selectedVehicle.nextLineNum}
+            {selectedVehicle.lineNum}
           </div>
           <div className="flex flex-col min-w-0">
             <h2 className="text-[13px] font-bold leading-none tracking-tight">
-              {selectedVehicle.dest || selectedVehicle.nextDest}
+              {selectedVehicle.dest}
             </h2>
           </div>
         </div>
@@ -322,19 +284,6 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
             <span className="text-[12px] font-mono font-medium">{timeLeft}s</span>
             <RefreshCw size="sm" className={clsx("text-zinc-500", isRefreshing && "animate-spin")} />
           </div>
-          
-          {/* Follow toggle */}
-          <button 
-            className={clsx(
-              "p-1.5 rounded-md border transition-all active:scale-95 shadow-sm cursor-pointer",
-              follow 
-                ? "bg-blue-50 border-blue-200 text-blue-600 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-400" 
-                : "bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300"
-            )}
-            onClick={() => setFollow(prev => !prev)}
-          >
-            <NavigationNorth size="sm" />
-          </button>
           
           {/* Close */}
           <button 
@@ -441,7 +390,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.sideNumber')}</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {selectedVehicle.sideNum}
+                  {selectedVehicle.vehId}
                 </span>
               </div>
             </div>
@@ -451,7 +400,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.route')}</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {selectedVehicle.routeId || selectedVehicle.nextRouteId || t('vehicle.info.noData')}
+                  {selectedVehicle.routeId || t('vehicle.info.noData')}
                 </span>
               </div>
             </div>
@@ -466,7 +415,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               </div>
             </div>
             
-            <div className="flex items-start gap-3">
+            {/* <div className="flex items-start gap-3">
               <InfoSquare size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">informacje</span>
@@ -479,14 +428,14 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                   })}
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-start gap-3 mb-10">
               <List size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-2">
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>                
                 {vehType && <div className="flex flex-col gap-2 text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {vehType?.map((item, i) => <span className="block">{i+1}. {item.type}</span>)}
+                  {vehType?.map((item, i) => <span className="block" key={i}>{i+1}. {item.type}</span>)}
                 </div>}
                 <div>
                   <button

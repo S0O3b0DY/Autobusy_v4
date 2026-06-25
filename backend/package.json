@@ -12,7 +12,10 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "fflate": "^0.8.2"
+    "@supabase/supabase-js": "^2.107.0",
+    "fflate": "^0.8.2",
+    "gtfs-realtime-bindings": "^2.0.0",
+    "protobufjs": "^8.6.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260510.1",

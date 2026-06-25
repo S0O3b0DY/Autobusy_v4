@@ -15,11 +15,10 @@ import LoadingScreen from './../components/LoadingScreen'
 import ChangeLang from './../components/ChangeLang'
 
 // types
-import type { Vehicle, RoutePolyline, BusStopData, Route } from "../types"
-import type { StopIconType } from "../types"
+import type { Vehicle, RoutePolyline, BusStopData, Route, StopIconType, LocalStorageBusStopsData } from "../types"
+import type { User } from "firebase/auth"
 
 // constants
-import stops from '../const/stops.ts'
 import { STOP_ICON_COLORS, VEHICLE_COLORS } from "../const/colors.ts"
 import { osmProviders } from '../lib/osmProviders'
 import "maplibre-gl/dist/maplibre-gl.css"
@@ -31,6 +30,7 @@ import gsap from "gsap"
 import { doc, setDoc } from "firebase/firestore"
 import posthog from "posthog-js"
 import { Navigate } from "react-router-dom"
+import { getUserJWTToken } from "../utils"
 
 
 
@@ -42,14 +42,13 @@ export const BUS_STOPS_LAYER  = 'bus-stops-layer'
 
 export default function App() {
 
-  const { userLoggedIn, user } = useAuth()
+  const { userLoggedIn, user }: { userLoggedIn: boolean, user: User } = useAuth()
   const { isDark, toggle } = useTheme()
   const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList,
     setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops } = useAppStore()
     
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
-  // const BSMarkersRef = useRef<Map<number, Marker>>(new Map())
   const countdownRef = useRef<any>(null)
   
   const polylineRef = useRef<RoutePolyline[] | null>(null)
@@ -57,8 +56,31 @@ export default function App() {
   const currentRouteIdRef = useRef<number | null>(null)
   const selectedBusStopRef = useRef<BusStopData | null>(selectedBusStop)
 
-
   
+  useEffect(() => {
+    const fetchFunc = async () => {
+      const token = await getUserJWTToken();
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:stops`);
+      return await res.json();
+    }
+
+    const stopsData: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") || "")
+
+    if (!stopsData || Math.floor(Date.now() / 1000) - stopsData.meta > 86400) {
+      fetchFunc()
+        .then((actualData) => {
+          console.log("Pobrane dane:", actualData);
+          
+          localStorage.setItem(
+            "stops", 
+            JSON.stringify({ meta: Math.floor(Date.now() / 1000), data: actualData })
+          );
+        })
+        .catch((err) => console.error("Błąd pobierania:", err))
+    }
+  }, [])
+
+  // Download user data
   useEffect(() => {
     const save = async () => {
       const userRef = doc(dbF, "users", user.uid)
@@ -86,14 +108,8 @@ export default function App() {
     })
     
     mapInstance.addControl(new maplibregl.NavigationControl({ showZoom: false, visualizePitch: true }), "top-right")
-    
-    // mapInstance.on("click", (e) => {
-    //   const { lng, lat } = e.lngLat
-    //   console.log(`Kliknięto: ${lat.toFixed(5)}, ${lng.toFixed(5)}`)
-    // })
 
     mapInstance.on("load", async () => {
-
       const dpr = window.devicePixelRatio || 1
       const types: StopIconType[] = ['default', 'selected', 'first', 'last']
       await Promise.all(
@@ -112,7 +128,7 @@ export default function App() {
     }
   }, [])
 
-  // update map when ther is a change between dark/light app mode
+  // update map when there is a change between dark/light app mode
   useEffect(() => {
     if (!map) return
 
@@ -139,7 +155,7 @@ export default function App() {
     const fetchData = async () => {
       if (isRunning) return
       isRunning = true
-      await fetch(import.meta.env.VITE_API_URL_VEHICLES)
+      await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:vehicles`) // import.meta.env.VITE_API_URL_VEHICLES
         .then(res => res.json())
         .then(data => {
           if (data?.error) throw new Error("Cannot download data", data.error)
@@ -195,11 +211,9 @@ export default function App() {
     })
 
     vehicles.forEach(vehicle => {
-      // if(vehicle.sideNum === selectedVehicle?.sideNum) setSelectedVehicle(vehicle)
-
       const existingMarker = markersRef.current.get(vehicle.vehId)
       
-      if (!shownLines.includes(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)) {
+      if (!shownLines.includes(vehicle.lineNum)) {
         if (existingMarker) {
           const element = existingMarker.getElement().firstElementChild as HTMLElement
 
@@ -228,8 +242,8 @@ export default function App() {
         ? (isDark ? VEHICLE_COLORS.dark.defaultBus : VEHICLE_COLORS.light.defaultBus)
         : (isDark ? VEHICLE_COLORS.dark.defaultTram : VEHICLE_COLORS.light.defaultTram)
 
-      const cond1 = cropLine(selectedVehicle?.lineNum ? selectedVehicle?.lineNum : selectedVehicle?.nextLineNum) === cropLine(vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum)
-      const cond2 = selectedVehicle?.sideNum === vehicle.sideNum
+      const cond1 = cropLine(selectedVehicle?.lineNum) === cropLine(vehicle.lineNum)
+      const cond2 = selectedVehicle?.vehId === vehicle.vehId
 
       if (vehicle.vehType === "A") {
         if (cond1) color = (isDark ? VEHICLE_COLORS.dark.busGroup : VEHICLE_COLORS.light.busGroup)
@@ -265,9 +279,9 @@ export default function App() {
           createRoute(vehicle)
           setMenuState(4)
           posthog.capture("clicked_on_vehicle", {
-            line: vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum,
-            destination: vehicle.dest ? vehicle.dest : vehicle.nextDest,
-            number: vehicle.sideNum
+            line: vehicle.lineNum ,
+            destination: vehicle.dest,
+            number: vehicle.vehId
           })
 
           map?.easeTo({
@@ -285,16 +299,21 @@ export default function App() {
         if(existingDest) {
           //@ts-ignore
           existingDest.style.background = color
-          existingDest.textContent = vehicle.dest ? vehicle.dest : vehicle.nextDest
+          existingDest.textContent = vehicle.dest
         }
-        if(existingLineNum) existingLineNum.textContent = vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum
+        if(existingLineNum) existingLineNum.textContent = vehicle.lineNum
         if(existingDelayCont) existingDelayCont.innerHTML = `
-          ${vehicle.timeToDep === 0 ? `
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;"><path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path></svg>
+          ${vehicle.timeToDep <= 0 ? `
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;">
+                <path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path>
+              </svg>
+              <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
             ` : `
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path></svg>
-            `}
-          <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;">
+                <path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path>
+              </svg>
+              <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.timeToDep)}<p>
+          `}
         `
 
       } else {
@@ -302,13 +321,13 @@ export default function App() {
         el.style.cssText = `cursor: pointer; opacity: 0.95; zIndex: 1;`
 
         el.innerHTML = `
-          <div data-ph-capture-attribute-element-name="dir: ${vehicle.dest ? vehicle.dest : vehicle.nextDest}; num: ${vehicle.sideNum}; route: ${vehicle.routeId || vehicle.nextRouteId}; line: ${vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum}" data-ph-capture-attribute-section="map">
+          <div data-ph-capture-attribute-element-name="dir: ${vehicle.dest}; num: ${vehicle.vehId}; route: ${vehicle.routeId}; line: ${vehicle.lineNum}" data-ph-capture-attribute-section="map">
             <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
               <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
             </svg>
             <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
               transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
-                ${vehicle.dest ? vehicle.dest : vehicle.nextDest}
+                ${vehicle.dest}
             </div>
             <div style="position: absolute; width:100%; height:42px; bottom:18px; display:flex; flex-direction:column; justify-content: space-between; padding: 4px 6px;">
               <div style="height:15px; display:flex; justify-content: space-between; align-items: start;">
@@ -317,19 +336,24 @@ export default function App() {
                   : (`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M16.375 2H7.621c-.224 0-1.399.065-2.503 1.351C4.031 4.616 4 5.862 4 6v11a2 2 0 0 0 2 2h1l-2 3h2.353l.667-1h8l.677 1H19l-2-3h1a2 2 0 0 0 2-2V6c.001-.188-.032-1.434-1.129-2.665C17.715 2.037 16.509 2 16.375 2zM10 4h4v2h-4V4zM7.5 17a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 7.5 17zm9 0a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 16.5 17zm1.5-5H6V8h12v4z"></path></svg>`)
                 }
                 <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px; letter-spacing: -1px" >
-                  ${vehicle.sideNum}
+                  ${vehicle.vehId}
                 </p>
                 <p id="lineNum" style="color:#fff; font-size: .95rem; font-weight: 800; letter-spacing: -1px; line-height: 15px" >
-                  ${vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum}
+                  ${vehicle.lineNum}
                 </p>
               </div>
               <div id="delayCont" style="height:15px; display:flex; justify-content: space-between; align-items: center;">
-                ${vehicle.timeToDep === 0 ? `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;"><path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path></svg>
+                ${vehicle.timeToDep <= 0 ? `
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: ${vehicle.delay > 0 ? "#0f0" : "#f00"};transform: ;msFilter:;">
+                      <path d="M11 8.414V18h2V8.414l4.293 4.293 1.414-1.414L12 4.586l-6.707 6.707 1.414 1.414z"></path>
+                    </svg>
+                    <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
                   ` : `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path></svg>
-                  `}
-                <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.delay)}<p>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;">
+                      <path d="M12 5c-4.411 0-8 3.589-8 8s3.589 8 8 8 8-3.589 8-8-3.589-8-8-8zm0 14c-3.309 0-6-2.691-6-6s2.691-6 6-6 6 2.691 6 6-2.691 6-6 6z"></path><path d="M11 9h2v5h-2zM9 2h6v2H9zm10.293 5.707-2-2 1.414-1.414 2 2z"></path>
+                    </svg>
+                    <p style="font-size:.75rem; color:#fff;">${formatTime(vehicle.timeToDep)}<p>
+                `}
               </div>
             </div>
           </div>
@@ -353,9 +377,9 @@ export default function App() {
           createRoute(vehicle)
           setMenuState(4)
           posthog.capture("clicked_on_vehicle", {
-            line: vehicle.lineNum ? vehicle.lineNum : vehicle.nextLineNum,
-            destination: vehicle.dest ? vehicle.dest : vehicle.nextDest,
-            number: vehicle.sideNum
+            line: vehicle.lineNum,
+            destination: vehicle.dest,
+            number: vehicle.vehId
           })
 
           map?.easeTo({
@@ -400,46 +424,28 @@ export default function App() {
 
   // FUNCTIONS
   async function fetchLiveVehiclesList() {
-    await fetch(import.meta.env.VITE_API_URL_LINES_LIST)
+    await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:list`) // import.meta.env.VITE_API_URL_LINES_LIST
       .then(res => res.json())
       .then(data => setLiveVehiclesList(data))
   }
 
   async function createRoute(veh: Vehicle | null, onlyMapUpdate: boolean = false) {
     if (!onlyMapUpdate) {
-      const routeId = veh?.routeId || veh?.nextRouteId || 0
-      // console.log(currentRouteIdRef.current === routeId, currentRouteIdRef.current, routeId, veh.routeId, veh.nextRouteId)
+      const routeId = veh?.routeId || 0
       if (currentRouteIdRef.current === routeId) return
   
       currentRouteIdRef.current = routeId
-  
-      const stopsMap = new Map(stops.map(s => [s.id, s]))
-      const polyline: RoutePolyline[] = []
-      const routeStops: BusStopData[] = []
-      const processedStopIds = new Set()
-  
-      const routeData: Route = await fetch(import.meta.env.VITE_API_URL_ROUTE+routeId)
-        .then(res => res.json())
-  
-  
-      routeData.stops.forEach(segment => {
-        const startStop = stopsMap.get(segment.startStopID)
-        if (!startStop) return
-  
-        polyline.push([startStop.y, startStop.x])
-  
-        if (!processedStopIds.has(segment.startStopID)) {
-          routeStops.push({ id: startStop.id, n: startStop.n, x: startStop.x, y: startStop.y, z: startStop.z })
-          processedStopIds.add(segment.startStopID)
-        }
-  
-        segment.geoPoints?.forEach(pt => polyline.push([pt.y, pt.x]))
-      })
+      
+      const routeData: Route = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:route/${routeId}`) // import.meta.env.VITE_API_URL_ROUTE+routeId
+      .then(res => res.json())
+      
+      const routeStops: BusStopData[] = routeData.stops
+      const polyline: RoutePolyline[] = routeData.points.map(point => [point.y, point.x])
+
   
       polylineRef.current = polyline
       routeStopsRef.current = routeStops
     }
-    // console.log("selectedBusStopRef: ", selectedBusStopRef)
 
     // Usuń starą warstwę przed dodaniem nowej
     removeRoute(false)
@@ -537,6 +543,7 @@ export default function App() {
     return <Navigate to="/logowanie" />
   }
 
+
   return (
     <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
       {vehicles.length === 0 && <div className='w-full h-dvh z-1000 absolute flex justify-center items-center'>
@@ -550,77 +557,13 @@ export default function App() {
       <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
         <ThemeToggle isDark={isDark} toggle={toggle} />
         <ChangeLang />
-        <div className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800
-          rounded-full flex items-center justify-center gap-2 shadow-sm z-10 text-[13px] font-bold tracking-tight
-          text-zinc-700 dark:text-zinc-200 min-w-9' ref={countdownRef}></div>
+        <div
+          className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center justify-center gap-2 shadow-sm z-10 text-[13px] font-bold tracking-tighttext-zinc-700 dark:text-zinc-200 min-w-9'
+          ref={countdownRef}
+        ></div>
       </div>
 
       <div ref={mapContainer} className="w-full h-screen" />
-{/*       
-      <section className="w-full px-6 py-12 bg-white border-t border-gray-200">
-        <div className="max-w-3xl mx-auto">
-          
-          <h1 className="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">
-            Live Mapa Komunikacji Miejskiej – Rozkład Jazdy na Żywo
-          </h1>
-          
-          <p className="text-base text-gray-600 leading-relaxed mb-8">
-            Witaj w nowoczesnym systemie monitorowania pojazdów transportu publicznego. Nasza aplikacja umożliwia śledzenie pozycji autobusów oraz tramwajów w czasie rzeczywistym bezpośrednio na interaktywnej mapie. Dzięki integracji z systemami GPS pojazdów oraz otwartymi danymi miejskimi (GTFS-RT), pasażerowie mogą sprawdzić rzeczywisty czas przyjazdu środka transportu na konkretny przystanek.
-          </p>
-          
-          <h2 className="text-xl font-bold text-gray-800 mb-3">
-            Najważniejsze funkcje aplikacji:
-          </h2>
-          
-          <ul className="list-disc list-inside space-y-2 text-gray-600 mb-8 pl-2">
-            <li><strong className="text-gray-900">Lokalizacja pojazdów na żywo:</strong> Sprawdź, gdzie dokładnie na mapie znajduje się Twój autobus lub tramwaj.</li>
-            <li><strong className="text-gray-900">Wirtualna tablica przystankowa:</strong> Kliknij w ikonę przystanku, aby zobaczyć najbliższe odjazdy i pełny rozkład jazdy.</li>
-            <li><strong className="text-gray-900">Zapisywanie ulubionych:</strong> Zaloguj się bezpiecznie przez OAuth (Google/Facebook), aby zapisać swoje codzienne linie i mieć do nich szybki dostęp.</li>
-            <li><strong className="text-gray-900">Inteligentna wyszukiwarka:</strong> Łatwo znajdź interesujący Cię przystanek, ulicę lub konkretny numer linii komunikacyjnej.</li>
-          </ul>
-
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Najczęściej zadawane pytania (FAQ):
-          </h2>
-          
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">1. Jak działa śledzenie autobusów na żywo?</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Pojazdy komunikacji miejskiej wyposażone są w nadajniki GPS, które co kilkanaście sekund wysyłają swoją pozycję do centralnego systemu. Nasza aplikacja przetwarza te dane i nanosi aktualne pozycje pojazdów na mapę, dzięki czemu wiesz, czy Twój transport spóźni się z powodu korków.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">2. Dlaczego warto zalogować się przez OAuth?</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Logowanie za pomocą konta Google lub Facebook (protokół OAuth) pozwala w bezpieczny sposób przechowywać Twoje ustawienia w chmurze. Dzięki temu na każdym urządzeniu masz dostęp do swoich ulubionych przystanków i linii autobusowych bez konieczności ponownego ich szukania.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">3. Co zrobić, gdy pojazd nie wyświetla się na mapie?</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Czasami z przyczyn technicznych (np. awaria nadajnika GPS w starym modelu tramwaju lub brak zasięgu) pojazd może tymczasowo nie wysyłać swojej pozycji. W takim przypadku aplikacja wyświetla czas odjazdu na podstawie standardowego, teoretycznego rozkładu jazdy.
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <footer className="w-full bg-gray-900 text-gray-400 py-6 text-center text-sm mt-auto pb-30">
-        <p className="mb-2">&copy; 2026 Szymon Piera. Wszelkie prawa zastrzeżone.</p>
-        <div className="space-x-4">
-          <Link to="/spis-linii" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
-            Spis Linii i Rozkłady
-          </Link>
-          <span className="text-gray-600">|</span>
-          <Link to="/polityka-prywatnosci" className="text-cyan-400 hover:text-cyan-300 transition-colors duration-200">
-            Polityka Prywatności
-          </Link>
-        </div>
-      </footer> */}
     </div>
   )
 }

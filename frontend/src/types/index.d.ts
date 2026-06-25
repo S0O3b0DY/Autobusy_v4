@@ -4,34 +4,37 @@
 // ==========================
 // STOPS
 // ==========================
-
 export type BusStopDeparture = {
-  routeID: number                 // i
-  departTimeInSec: number         // t
-  dest: string                    // d
-  dirType: "T" | "P"              // dd
-  vehType: "A" | "T"              // p
-  busStopID: number               // ip
-  timeDepPredMode: number         // m
-  feat: string                    // vn
-  departTimeFormated: string      // v
-  kn: string                      // kn
-  di: number                      // di
-  iks: number                     // iks
-  busLine: string                 // r
+  routeID: number;                 // id (z elementu S)
+  departTimeInSec: number;         // s (z elementu S)
+  dest: string;                    // dir (z elementu R)
+  dirType: "T" | "P" | "N" | string; // veh (z elementu S) - w XML masz też "N"
+  vehType: "A" | "T" | string;     // vt (z elementu R)
+  busStopID: number;               // z parametru args
+  timeDepPredMode: number;         // m (z elementu S)
+  feat: string;                    // vuw (z elementu R)
+  departTimeFormated: string;      // t (z elementu S)
+  busLine: string;                 // nr (z elementu R)
+  vehId: number;                   // nb (z elementu S)
+  // Dodatkowe pola z Twojego interfejsu, których nie ma w tym XML (opcjonalne)
+  kn?: string;
+  di?: number;
+  iks?: number;
 }
 
 export interface BusStopTimetable {
-  id: number
-  serverTime: string
-  departs: BusStopDeparture[]
+  stopID: number
+  stopCode: number;
+  serverTime: string;
+  name: string;
+  dayType: number;
+  dayName: string;
+  departs: BusStopDeparture[];
 }
-
 
 // ==========================
 // ROUTES
 // ==========================
-
 export type GeoRoutePoint = {
   no: number   // l
   x: number    // x
@@ -45,9 +48,17 @@ export type RouteBusStopPoint = {
 }
 
 export interface Route {
-  routeVar: number
-  busLine: string
-  stops: RouteBusStopPoint[]
+  routeId: string
+  formattedDate: string
+  shapeId: string
+  points: RoutePoint[]
+  stops: BusStopData[]
+}
+
+type RoutePoint = {
+  x: number
+  y: number
+  no: number
 }
 
 export type RoutePolyline = [number, number]
@@ -56,8 +67,7 @@ export type RoutePolyline = [number, number]
 // ==========================
 // VEHICLES
 // ==========================
-
-export interface Vehicle {
+export interface OldVehicle {
   vehId: number                 // id
   sideNum: number               // nb
   lineNum: string               // nr
@@ -86,11 +96,26 @@ export interface Vehicle {
   courseId: string              // kwi
 }
 
+export interface Vehicle {
+  vehId: number                 // id
+  lineNum: string               // nr
+  dirType: "T" | "P" | ""       // kr
+  routeId: number               // ik
+  lng: number                   // x
+  lat: number                   // y
+  bearing: number
+  delay: number                 // o
+  state: number                  // s
+  dest: string                  // op
+  // feat: string                  // c?????????????????
+  timeToDep: number             // is
+  vehType: "A" | "T"            // vt
+}
+
 
 // ==========================
 // VEHICLE NEXT STOPS
 // ==========================
-
 export type VehicleTimetableDeparure = {
   no: number
   busStopID: number
@@ -105,16 +130,33 @@ export type VehicleTimetableDeparure = {
 export interface VehicleTimetable {
   routeId: number
   busLine: string
-  vehType: number
+  vehType: string
   dest: string
   dep: VehicleTimetableDeparure[]
 }
 
 
+// ==========================
+// LINES LIST
+// ==========================
+interface LiveVehiclesList {
+  buses: string[],
+  trams: string[]
+}
+
+export interface TimetableRouteList {
+  stopId: number
+  stopCode: string
+  stopName: string
+  routes: Record<string, number> 
+}
+
+export type Timetable = Record<string, Record<string, string[]>>
 
 
 export type BusStopData = {
   id: number
+  c: string
   n: string
   y: number
   x: number
@@ -147,7 +189,10 @@ export type LangsList = {
 export type StopIconType = 'default' | 'selected' | 'first' | 'last'
 
 
-
+export interface LocalStorageBusStopsData {
+  meta: number
+  data: BusStopData[]
+}
 
 
 

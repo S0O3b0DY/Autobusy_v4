@@ -1,5 +1,6 @@
 // Copyright (c) 2026 Szymon Piera. All rights reserved.
 // Wszelkie prawa zastrzeżone.
+
 import logo from "/logo.svg"
 
 import { Link, Navigate } from "react-router-dom";
@@ -69,7 +70,7 @@ export default function LoginPage() {
                 className="w-5 h-5"
                 alt="Facebook"
               />
-              <span className="ml-2 text-sm font-bold">
+              <span className="ml-2 text-sm font-bold text-neutral-700">
                 Facebook
               </span>
             </button>
@@ -82,7 +83,7 @@ export default function LoginPage() {
                 className="w-5 h-5"
                 alt="Microsoft"
               />
-              <span className="ml-2 text-sm font-bold">
+              <span className="ml-2 text-sm font-bold text-neutral-700">
                 Microsoft
               </span>
             </button>
@@ -95,7 +96,7 @@ export default function LoginPage() {
                 className="w-5 h-5"
                 alt="GitHub"
               />
-              <span className="ml-2 text-sm font-bold">
+              <span className="ml-2 text-sm font-bold text-neutral-700">
                 GitHub
               </span>
             </button>
