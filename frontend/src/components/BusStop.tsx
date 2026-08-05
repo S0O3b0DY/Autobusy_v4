@@ -2,16 +2,18 @@
 // Wszelkie prawa zastrzeżone.
 
 // hooks
-import { useState, useEffect, useCallback, useRef, type RefObject } from "react"
+import { useState, useEffect, useCallback, useRef, useMemo, type RefObject } from "react"
 import { useAppStore } from "../lib/store"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "../contexts/AuthContext.tsx"
 
 // components
-import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight, Star } from "@boxicons/react"
+import { X, RefreshCw, Hashtag, Globe, City, Bus, Tram, ChevronRight, Star, CalendarDetail, ChevronDown } from "@boxicons/react"
+import ScheduleColumn from "./ScheduleColumn.tsx"
+import LoadingSceduleColumn from "./LoadingSceduleColumn.tsx"
 
 // types
-import type { BusStopTimetable, BusStopData } from './../types/index.d.ts'
+import type { BusStopTimetable, BusStopData, TimetableRouteList, Timetable } from './../types/index.d.ts'
 
 // constants
 import { BUS_STOPS_SEARCH_LAYER, BUS_STOPS_SEARCH_SOURCE } from "./StopSearch.tsx"
@@ -33,17 +35,40 @@ export default function BusStop({ routeStopsRef }: Props) {
   const { t } = useTranslation()
   const { userLoggedIn } = useAuth()
 
+  const [timetableMenu, setTimetableMenu] = useState(false)
+  const [timetableRouteList, setTimetableRouteList] = useState<TimetableRouteList | null>(null)
+  const [timetableSelectedRoute, setTimetableSelectedRoute] = useState<[string, number] | null>(null)
+  const [timetableData, setTimetableData] = useState<Timetable | null>(null)
+  const [selectedDirection, setSelectedDirection] = useState<string>('')
+  
+
   const [timeLeft, setTimeLeft] = useState(30)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [departures, setDepartures] = useState<BusStopTimetable | null>(null)
 
   const selectedBusStopIdRef = useRef<number | null>(selectedBusStop?.id)
+  const timetableDivRef = useRef<HTMLDivElement | null>(null)
+
+  const availableDirections = useMemo(() => {
+    if (!timetableData) return []
+    
+    const directionsSet = new Set<string>()
+    
+    if (timetableData.ROBOCZE) Object.keys(timetableData.ROBOCZE).forEach(k => directionsSet.add(k))
+    if (timetableData.SOBOTY) Object.keys(timetableData.SOBOTY).forEach(k => directionsSet.add(k))
+    if (timetableData.NIEDZIELE) Object.keys(timetableData.NIEDZIELE).forEach(k => directionsSet.add(k))
+
+    return Array.from(directionsSet)
+  }, [timetableData])
 
   useEffect(() => {
     if (selectedBusStop?.id !== selectedBusStopIdRef.current) {
       selectedBusStopIdRef.current = selectedBusStop?.id
       setDepartures(null)
     }
+
+    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
+    fetchData()
   }, [selectedBusStop])
 
   const fetchData = useCallback(async () => {
@@ -61,10 +86,6 @@ export default function BusStop({ routeStopsRef }: Props) {
     }
   }, [selectedBusStop])
 
-  useEffect(() => {
-    setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
-    fetchData()
-  }, [selectedBusStop])
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -79,6 +100,36 @@ export default function BusStop({ routeStopsRef }: Props) {
 
     return () => clearInterval(timer)
   }, [fetchData])
+
+
+  useEffect(() => {
+    async function downloadTimetableRouteList() {
+      const rawData = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:timetable_route_list/${selectedBusStop?.id}`)
+      const jsonData: TimetableRouteList = await rawData.json()
+      setTimetableRouteList(jsonData)
+      setTimetableSelectedRoute([Object.keys(jsonData.routes)[0], Object.values(jsonData.routes)[0]])
+    }
+    if (timetableMenu) downloadTimetableRouteList()
+  }, [timetableMenu])
+
+  useEffect(() => {
+    async function downloadTimetableData() {
+      const rawData = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:timetable/${selectedBusStop?.id};${timetableSelectedRoute?.[1]}`)
+      const jsonData: Timetable = await rawData.json()
+      setTimetableData(jsonData)
+
+      const directionsSet = new Set<string>()
+    
+      if (jsonData.ROBOCZE) Object.keys(jsonData.ROBOCZE).forEach(k => directionsSet.add(k))
+      if (jsonData.SOBOTY) Object.keys(jsonData.SOBOTY).forEach(k => directionsSet.add(k))
+      if (jsonData.NIEDZIELE) Object.keys(jsonData.NIEDZIELE).forEach(k => directionsSet.add(k))
+
+      const directionsArray = Array.from(directionsSet)
+      setSelectedDirection(directionsArray[0])
+    }
+    setTimetableData(null)
+    if (timetableSelectedRoute && timetableMenu) downloadTimetableData()
+  }, [timetableSelectedRoute])
 
   function handleManualReset() {
     setTimeLeft(import.meta.env.VITE_REFRESH_MENU)
@@ -119,11 +170,109 @@ export default function BusStop({ routeStopsRef }: Props) {
       if (map?.getSource(BUS_STOPS_SEARCH_SOURCE)) map.removeSource(BUS_STOPS_SEARCH_SOURCE)
     }
   }
-    
+
+
   if (!selectedBusStop) return null
 
+  if (timetableMenu) return (
+    <div
+      className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60 pb-10"
+      ref={timetableDivRef}  
+    >
+      {/* HEADER */}
+      <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50 shrink-0">
+        <div>
+          <h2 className="text-[16px] font-bold leading-tight tracking-tight">
+            Rozkład Jazdy
+          </h2>
+          <p className="text-[12px] text-zinc-500 dark:text-zinc-400 font-medium truncate">
+            {selectedBusStop.n} (Przystanek #{selectedBusStop.id} | {selectedBusStop.c})
+          </p>
+        </div>
+
+        <button 
+          className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm cursor-pointer shrink-0"
+          onClick={() => setTimetableMenu(false)}>
+          <X size="sm" />
+        </button>
+      </div>
+
+      {/* MAIN CONTENT CONTAINER */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto custom-scrollbar">
+
+        {/* 1. SEKCJA WYBORU LINII */}
+        <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20 shrink-0">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-2">
+            Wybierz linię
+          </label>
+          
+          {/* Grid dostępnych linii */}
+          <div className="flex flex-wrap gap-1.5">
+            {timetableRouteList && Object.entries(timetableRouteList.routes).map(([lineName, routeId]) => (
+              <button 
+                key={routeId}
+                className={clsx(timetableSelectedRoute?.[0]===lineName ? " bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30 transition-colors cursor-pointer" : "px-3 py-1.5 rounded-lg font-black text-xs bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-700/50 active:scale-95 transition-all cursor-pointer", "px-3 py-1.5 rounded-lg font-black text-xs")}
+                onClick={() => setTimetableSelectedRoute([lineName, routeId])}
+              >
+                {lineName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 2. SEKCJA WYBORU KIERUNKU (DROPDOWN) */}
+        <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
+          <label className="block text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-zinc-400 mb-1.5">
+            Kierunek
+          </label>
+          
+          <div className="relative">
+            <select
+              className="w-full appearance-none bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200 text-xs font-semibold py-2 pl-3 pr-8 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              onChange={(e) => setSelectedDirection(e.target.value)}
+              disabled={availableDirections.length === 0}
+            >
+              {availableDirections.map(dir => 
+                <option key={dir} value={dir}>{dir}</option>
+              )}
+            </select>
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-400">
+              <ChevronDown size="sm" />
+            </div>
+          </div>
+        </div>
+
+        {/* 3. ROZKŁAD JAZDY (TABLICZKA) */}
+        <div className="flex-1 p-3 flex flex-col gap-3 min-h-0">
+          
+          {/* 3A. WARIANT Z DANYMI (TABELA ROZKŁADOWA) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            
+            {/* Kolumna: Dni Robocze */}
+            {timetableData ? <ScheduleColumn 
+              title="Dni Robocze"
+              times={timetableData?.ROBOCZE?.[selectedDirection] ?? []}
+            /> : <LoadingSceduleColumn /> }
+
+            {/* Kolumna: Soboty */}
+            {timetableData ? <ScheduleColumn 
+              title="Soboty"
+              times={timetableData?.SOBOTY?.[selectedDirection] ?? []}
+            /> : <LoadingSceduleColumn /> }
+
+            {/* Kolumna: Niedziele i Święta */}
+            {timetableData ? <ScheduleColumn 
+              title="Niedziele i Święta"
+              times={timetableData?.NIEDZIELE?.[selectedDirection] ?? []}
+            /> : <LoadingSceduleColumn /> }
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
+    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden border border-zinc-200/60 dark:border-zinc-800/60 pb-10">
       
       {/* HEADER */}
       <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50">
@@ -138,6 +287,12 @@ export default function BusStop({ routeStopsRef }: Props) {
           >
             <span className="text-[12px] font-mono font-medium">{timeLeft}s</span>
             <RefreshCw size="sm" className={clsx("text-zinc-500", isRefreshing && "animate-spin")} />
+          </button>
+          <button 
+            className="p-1.5 rounded-md  border active:scale-95 transition-all shadow-sm cursor-pointer bg-white dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-zinc-400"
+            onClick={() => setTimetableMenu(true)}
+          >
+            <CalendarDetail size="sm" />
           </button>
           <button 
             onClick={() => { if(userLoggedIn) addToFavorites(selectedBusStop) }}

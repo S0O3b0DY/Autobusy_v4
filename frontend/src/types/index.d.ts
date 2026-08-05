@@ -144,6 +144,11 @@ interface LiveVehiclesList {
   trams: string[]
 }
 
+
+
+// ==========================
+// TIMETABLE
+// ==========================
 export interface TimetableRouteList {
   stopId: number
   stopCode: string
@@ -151,7 +156,10 @@ export interface TimetableRouteList {
   routes: Record<string, number> 
 }
 
-export type Timetable = Record<string, Record<string, string[]>>
+export type Timetable = Record<"ROBOCZE" | "SOBOTY" | "NIEDZIELE" , Record<string, string[]>>
+
+
+
 
 
 export type BusStopData = {

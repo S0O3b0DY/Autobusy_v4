@@ -7,7 +7,6 @@
 
 @theme {
   --color-primaty-900: #091426;
-
   --color-bg-1: #F8F9FF;
 }
 
@@ -17,12 +16,19 @@ html {
   background: var(--color-bg-1);
 }
 
-/* *::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
+*::-webkit-scrollbar {
+  /* display: none !important; */
+  width: 8px !important;
+  /* height: 0 !important; */
 }
-
+*::-webkit-scrollbar-thumb {
+  background: #7e7e7e6b;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #7e7e7ead;
+}
+/* 
 * {
   scrollbar-width: none !important;
 }
@@ -45,7 +51,6 @@ html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-
   body {
     @apply bg-bg-1 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100;
   }

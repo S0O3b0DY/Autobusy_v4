@@ -2,33 +2,50 @@
 // Wszelkie prawa zastrzeżone.
 
 // hooks
-import { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next"
-import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
+import { useState, useEffect } from 'react'
+import { useAppStore } from "../lib/store"
 import { useAuth } from "../contexts/AuthContext"
 
 // components
-import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
+import { Trash, Checks, RotateCw, Bus, Train } from "@boxicons/react"
 
 // types
 // constants
 // other
 import clsx from "clsx"
+import { getUserJWTToken } from "../utils"
 import { doc, setDoc } from "firebase/firestore"
 import { dbF } from '../lib/firebase.ts'
 
-
-
-export default function Filter() {
+export default function OnboardingLines() {
   const { userLoggedIn, user } = useAuth()
-  const {liveVehiclesList, shownLines, setShownLines, setMenuState} = useAppStore()
-  const { t } = useTranslation()
+  const {liveVehiclesList, shownLines, setShownLines, setLiveVehiclesList} = useAppStore()
 
-  // console.log(shownLines)
-  // Lokalny stan tylko dla interfejsu (aktywna zakładka)
   const [activeTab, setActiveTab] = useState<'buses' | 'trams'>('buses')
 
-  const toggleLine = (line: string) => {
+  const currentList = liveVehiclesList[activeTab]
+  
+  useEffect(() => {
+    async function fetchLiveVehiclesList() {
+      await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:list`) // import.meta.env.VITE_API_URL_LINES_LIST
+        .then(res => res.json())
+        .then(data => setLiveVehiclesList(data))
+    }
+    if(liveVehiclesList.buses.length === 0) fetchLiveVehiclesList()
+  }, [])
+
+  useEffect(() => {
+    const save = async () => {
+      const userRef = doc(dbF, "users", user.uid)
+      
+      await setDoc(userRef, { shownLines: shownLines }, { merge: true })
+    }
+    
+    if (!userLoggedIn) return
+    save()
+  }, [shownLines])
+
+  function toggleLine(line: string) {
     if (shownLines.includes(line)) {
       setShownLines(shownLines.filter(l => l !== line))
     } else {
@@ -50,40 +67,20 @@ export default function Filter() {
   }
 
   const restoreToDefaults = () => {
-    setShownLines(INIT_SHOWN_LINES)
+    setShownLines([])
   }
 
-  const currentList = liveVehiclesList[activeTab]
-
-  useEffect(() => {
-    const save = async () => {
-      const userRef = doc(dbF, "users", user.uid)
-      
-      await setDoc(userRef, { shownLines: shownLines }, { merge: true })
-    }
-    
-    if (!userLoggedIn) return
-    save()
-  }, [shownLines])
-
   return (
-    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 mb-10 overflow-hidden border border-zinc-200/60 dark:border-zinc-800/60 pb-10">
-      
-      {/* HEADER */}
-      <div className="px-4 py-3 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50 border-b border-zinc-200/50 dark:border-zinc-800/50">
-        <h2 className="text-[15px] font-bold leading-none tracking-tight">
-          {t('filter.title')}
-        </h2>
-        <button 
-          onClick={() => setMenuState(0)}
-          className="p-1.5 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 hover:text-red-500 active:scale-95 transition-all shadow-sm shrink-0 cursor-pointer"
-        >
-          <X size="sm" />
-        </button>
-      </div>
+    <>
+      <h1 className="text-2xl md:text-3xl font-black text-neutral-900 mb-3 text-center md:text-left">
+        Jakimi liniami podróżujesz?
+      </h1>
+      <p className="text-sm font-medium text-neutral-600 mb-6 text-center md:text-left">
+        Wybierz linie, z których korzystasz najczęściej.
+      </p>
 
-      {/* TABS (Segmented Control) */}
-      <div className="p-3 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-950">
+      {/* TABS */}
+      <div className="py-3 px-1 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white dark:bg-zinc-950">
         <div className="flex bg-zinc-100 dark:bg-zinc-900/80 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab('buses')}
@@ -95,7 +92,7 @@ export default function Filter() {
             )}
           >
             <Bus size="sm" />
-            {t('filter.tabs.buses')}
+            Autobusy
           </button>
           <button
             onClick={() => setActiveTab('trams')}
@@ -107,7 +104,7 @@ export default function Filter() {
             )}
           >
             <Train size="sm" />
-            {t('filter.tabs.trams')}
+            Tramwaje
           </button>
         </div>
       </div>
@@ -118,35 +115,35 @@ export default function Filter() {
         {/* Actions bar */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/50 dark:bg-zinc-900/20">
           <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">
-            {activeTab === 'buses' ? t('filter.labels.busLines') : t('filter.labels.tramLines')}
+            {activeTab === 'buses' ? "Linie autobusowe" : "Linie tramwajowe"}
           </span>
           <div className="flex gap-2">
             <button 
               onClick={selectAllCurrentTab}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors cursor-pointer"
             >
-              <Checks size="xs" /> {t('filter.actions.selectAll')}
+              <Checks size="xs" /> Zaznacz Wszystko
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={clearCurrentTab}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors cursor-pointer"
             >
-              <Trash size="xs" /> {t('filter.actions.clear')}
+              <Trash size="xs" /> Wyczyść
             </button>
             <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={restoreToDefaults}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-green-500 transition-colors cursor-pointer"
             >
-              <RotateCw size="xs" /> {t('filter.actions.reset')}
+              <RotateCw size="xs" /> Zresetuj
             </button>
           </div>
         </div>
 
         {/* Grid of Lines */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-          <div className="grid grid-cols-6 sm:grid-cols-7 md:grid-cols-8 lg:grid-cols-9 gap-2">
+          <div className="grid grid-cols-6 sm:grid-cols-10 md:grid-cols-11 lg:grid-cols-13 gap-2">
             {currentList.map(line => {
               const isSelected = shownLines.includes(line)
               const isBus = activeTab === 'buses'
@@ -173,20 +170,6 @@ export default function Filter() {
           </div>
         </div>
       </div>
-
-      {/* FOOTER */}
-      <div className="px-4 py-3 border-t border-zinc-200/50 dark:border-zinc-800/50 bg-zinc-50/80 dark:bg-zinc-900/50 shrink-0">
-        <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center">
-          {t('filter.footer.showing')}
-          <span className="font-bold text-zinc-800 dark:text-zinc-100"> {t('filter.footer.linesCount', { count: shownLines.length })} </span>
-          {t('filter.footer.onMap')}
-        </p>
-        <p className="text-[12px] font-medium text-zinc-500 dark:text-zinc-400 text-center mt-3">
-          {t('filter.footer.warning')}
-        </p>
-      </div>
-
-    </div>
+    </>
   )
 }
-

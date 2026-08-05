@@ -183,16 +183,16 @@ export default function BottomSheet({ children, title }: Props) {
       style={{ height: snapsRef.current[0], willChange: "height", WebkitBackdropFilter: "blur(24px) saturate(180%)",
         backdropFilter: "blur(24px) saturate(180%)",
       }}
+      onMouseDown={(e) => onDown(e.clientY)}
       className="fixed bottom-0 left-1/2 -translate-x-1/2 lg:left-10 lg:translate-x-0
         w-full max-w-2xl z-50 bg-white/95 dark:bg-neutral-900/90 border border-black/10
         dark:border-white/10 rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
     >
-      {/* handle — jedyny obszar drag */}
+      {/* handle */}
       <div
         ref={handleRef}
         className="shrink-0 flex flex-col items-center gap-2 pt-3 pb-2 cursor-grab active:cursor-grabbing"
         style={{ touchAction: "none", userSelect: "none" }}
-        onMouseDown={(e) => onDown(e.clientY)}
       >
         <div className="w-50 h-1 rounded-full bg-black/20 dark:bg-white/25" />
         {title && (
@@ -259,7 +259,11 @@ export default function BottomSheet({ children, title }: Props) {
           className="flex flex-col items-center justify-center transition-active active:scale-90 z-100 hover:bg-blue-50 dark:hover:bg-blue-600/15 px-2.5 rounded-md cursor-pointer"
           onClick={() => setMenuState(menuState === 5 ? 0 : 5)}
         >
-          <UserCircle className={clsx("text-[24px]", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
+          {(userLoggedIn && user.photoURL) ? (
+            <img className="w-6 aspect-square rounded-full" src={user.photoURL} loading="lazy" />
+          ) : (
+            <UserCircle className={clsx("text-[24px]", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")} />
+          )}
           <span className={clsx("text-[10px] mt-1 font-medium", menuState === 5 ? "text-[#007AFF]" : "text-gray-500 dark:text-gray-400")}>
             {userLoggedIn ? user.displayName : t('nav.account')}
           </span>

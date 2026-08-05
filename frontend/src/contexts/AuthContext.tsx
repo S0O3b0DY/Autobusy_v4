@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setShownLines, shownLines, favoriteStops, setFavoriteStops } = useAppStore()
   const [user, setUser] = useState<any>(null)
   const [userLoggedIn, setUserLoggedIn] = useState(false)
+  const [onboarding, setOnboarding] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -30,6 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const userRef = doc(dbF, "users", fbUser.uid)
       const userSnap = await getDoc(userRef)
       const userData = userSnap.exists() ? userSnap.data() : {}
+
+      if (!userData.onboardingFinished) {
+        setOnboarding(true)
+      }
 
       userData.shownLines && setShownLines(userData.shownLines)
       userData.favoriteStops && setFavoriteStops(userData.favoriteStops)
@@ -56,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           })
 
           if (!userSnap.exists()) {
+            // rejestracja
             await setDoc(userRef, {
               uid: result.user.uid,
               displayName: result.user.displayName,
@@ -64,9 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               createdAt: serverTimestamp(),
               lastLogin: serverTimestamp(),
               shownLines: shownLines,
-              favoriteStops: favoriteStops
+              favoriteStops: favoriteStops,
+              onboardingFinished: false
             })
           } else {
+            // logowanie
             await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true })
           }
         }
@@ -113,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, userLoggedIn, loading }}>
+    <AuthContext.Provider value={{ user, userLoggedIn, loading, onboarding, setOnboarding }}>
       {!loading && children}
     </AuthContext.Provider>
   )

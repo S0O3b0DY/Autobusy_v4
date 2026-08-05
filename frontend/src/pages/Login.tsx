@@ -54,13 +54,13 @@ export default function LoginPage() {
         </Link>
       </refractive.header>
 
-      <main className="px-6 mt-32 max-w-7xl w-full mx-auto grow flex items-center justify-center pb-12">
-        <div className="bg-white border-2 border-neutral-200 rounded-3xl p-8 md:p-12 shadow-xl w-full max-w-135">
+      <main className="px-3 mt-32 max-w-7xl w-full mx-auto grow flex items-center justify-center pb-12">
+        <div className="bg-white border-2 border-neutral-200 rounded-3xl py-8 px-3 md:p-12 shadow-xl w-full max-w-135">
           <h1 className="text-3xl font-black text-neutral-900 mb-8 text-center md:text-left">
             Zaloguj się do UrbanTransit
           </h1>
 
-          <div className="grid grid-cols-3 gap-3 mb-4">
+          <div className="grid grid-cols-3 gap-2 md:gap-3 mb-4">
             <button
               onClick={() => signIn(new FacebookAuthProvider())}
               className="flex justify-center items-center py-2.5 px-4 border-2 border-neutral-200 rounded-lg hover:bg-neutral-50 hover:-translate-y-0.5 transition-transform cursor-pointer active:border-neutral-800"
@@ -135,5 +135,5 @@ export default function LoginPage() {
         </div>
       </footer>
     </div>
-  );
+  )
 }

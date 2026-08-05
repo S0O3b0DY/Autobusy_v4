@@ -68,7 +68,7 @@
   },
 
   "stopSearch": {
-    "placeholder": "Szukaj przystanku (np. Śląska)...",
+    "placeholder": "Szukaj przystanku ...",
     "hints": {
       "minChars": "Wpisz co najmniej <bold className=\"text-zinc-600 dark:text-zinc-200 font-bold\">3 znaki</bold>, aby rozpocząć wyszukiwanie.",
       "noResults": "Nie znaleziono przystanku o nazwie \"{{query}}\"."

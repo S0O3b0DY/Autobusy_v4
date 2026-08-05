@@ -18,6 +18,7 @@ export default function TransportAppLoader() {
   const containerRef = useRef<HTMLDivElement>(null)
   const logoBoxRef = useRef<HTMLDivElement>(null)
   const iconRef = useRef<HTMLDivElement>(null)
+  const Ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // Tworzymy ultra-płynną krzywą "sprężyny" (iOS Style)
@@ -55,10 +56,15 @@ export default function TransportAppLoader() {
       opacity: 1,
       duration: 0.5,
       ease: "power2.out",
-      onComplete: () => {
-        if (containerRef.current) containerRef.current.style.display = 'none';
-      }
+      // onComplete: () => {
+      //   if (containerRef.current) containerRef.current.style.display = 'none';
+      // }
     }, "-=0.4") // Zaczyna znikać pod koniec zwijania paska
+
+    .to(Ref.current, {
+      opacity: 1,
+      duration: 0.1
+    })
   }, [])
 
   return (
@@ -82,6 +88,7 @@ export default function TransportAppLoader() {
           </div>
         </div>
       </div>
+      <div ref={Ref} className='animate-pulse absolute bg-white/90 px-8 py-4 rounded-2xl border-2 border-zinc-400 opacity-0'>Ładowanie Danych ...</div>
     </div>
   )
 }

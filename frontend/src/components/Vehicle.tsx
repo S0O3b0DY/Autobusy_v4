@@ -319,6 +319,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
         <div className="flex-1 flex flex-col min-w-0 md:border-r border-zinc-200/50 dark:border-zinc-800/50">
           <div className="flex-1 custom-scrollbar p-2 space-y-1 overflow-hidden">
             {!stops && <p className="text-center mt-2 text-sm text-zinc-500">{t('vehicle.loading')}</p>}
+            {stops?.routeId === 0 && <p className="text-center mt-2 text-sm text-zinc-500">Nie udało się pobrać danych (｡•́︿•̀｡).</p>}
 
             {stops && stops.dep.map((stop) => {
               const isLive = stop.timeDepPredMode === 1
@@ -427,7 +428,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               <div>
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.totalStops')}</span>
                 <span className="text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
-                  {stops?.dep ? stops.dep[stops.dep.length - 1].no : t('vehicle.loading')}
+                  {stops?.dep[stops.dep.length - 1]?.no ?? t('vehicle.loading')}
                 </span>
               </div>
             </div>

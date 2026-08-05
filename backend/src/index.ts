@@ -342,7 +342,7 @@ export default {
     // ===== VEHICLES =====
     // /vehicles
     if (path === '/vehicles') {
-      if (VEHICLES_CACHE.vehicleData.length === 0 || (Math.floor(Date.now() / 1000) - VEHICLES_CACHE.meta) > 15) {
+      if (VEHICLES_CACHE.vehicleData.length === 0 || (Math.floor(Date.now() / 1000) - VEHICLES_CACHE.meta) > 10) {
         const response = await fetch('https://cdn.zbiorkom.live/gtfs-rt/lodz.pb')
         const buffer = await response.arrayBuffer()
         const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer))
@@ -352,6 +352,7 @@ export default {
         for (const entity of feed.entity) {
           const vehIdStr = entity.vehicle?.vehicle?.label || entity.tripUpdate?.vehicle?.label
           if (!vehIdStr) continue
+          if (vehIdStr === "1957") console.log(entity)
   
           if (!vehiclesMap[vehIdStr]) {
             vehiclesMap[vehIdStr] = { position: null, tripUpdate: null }

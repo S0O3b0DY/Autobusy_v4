@@ -10,6 +10,7 @@ import ErrorPage from './pages/ErrorPage'
 import Policy from './pages/Policy'
 import LinesDesc from './pages/LinesDesc'
 import LoginPage from './pages/Login'
+import Onboarding from './pages/Onboarding'
 
 export const router = createBrowserRouter([
   { path: '/',        element: <HomePage />,     errorElement: <ErrorPage /> },
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
   { path: '/app',        element: <App />,     errorElement: <ErrorPage /> },
   { path: '/preview', element:  <PreviewPage />, errorElement: <ErrorPage /> },
   { path: '/polityka-prywatnosci', element:  <Policy />, errorElement: <ErrorPage /> },
+  { path: '/onboarding', element:  <Onboarding />, errorElement: <ErrorPage /> },
   { path: '/spis-linii', element:  <LinesDesc />, errorElement: <ErrorPage /> },
   { path: '*',        element: <NotFoundPage /> },
 ])

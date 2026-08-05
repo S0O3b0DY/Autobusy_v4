@@ -42,10 +42,10 @@ export const BUS_STOPS_LAYER  = 'bus-stops-layer'
 
 export default function App() {
 
-  const { userLoggedIn, user }: { userLoggedIn: boolean, user: User } = useAuth()
+  const { userLoggedIn, user, onboarding }: { userLoggedIn: boolean, user: User, onboarding: boolean } = useAuth()
   const { isDark, toggle } = useTheme()
   const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList,
-    setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops } = useAppStore()
+    setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops, liveVehiclesList } = useAppStore()
     
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
@@ -149,7 +149,7 @@ export default function App() {
     let isRunning = false
     let count = REFRESH
 
-    fetchLiveVehiclesList()
+    if(liveVehiclesList.buses.length === 0) fetchLiveVehiclesList()
 
     const fetchData = async () => {
       if (isRunning) return
@@ -334,7 +334,7 @@ export default function App() {
                   `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M21 6.021c.003-.146-.007-1.465-1.3-2.735C18.427 2.036 17.143 2 17 2H6.996c-.239 0-1.493.063-2.708 1.302C3.036 4.578 3 5.859 3 6v3H2v3h1v6c0 .734.406 1.373 1 1.721V21a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h10v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.277A1.99 1.99 0 0 0 21 18v-6h1V9h-1V6.021zM9 4h6v2H9V4zM6.5 18a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 6.5 18zm4.5-5H5V8h6v5zm6.5 5a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 17.5 18zm1.5-5h-6V8h6v5z"></path></svg>`)
                   : (`<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" style="fill: #fff;transform: ;msFilter:;"><path d="M16.375 2H7.621c-.224 0-1.399.065-2.503 1.351C4.031 4.616 4 5.862 4 6v11a2 2 0 0 0 2 2h1l-2 3h2.353l.667-1h8l.677 1H19l-2-3h1a2 2 0 0 0 2-2V6c.001-.188-.032-1.434-1.129-2.665C17.715 2.037 16.509 2 16.375 2zM10 4h4v2h-4V4zM7.5 17a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 7.5 17zm9 0a1.5 1.5 0 1 1 .001-3.001A1.5 1.5 0 0 1 16.5 17zm1.5-5H6V8h12v4z"></path></svg>`)
                 }
-                <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px; letter-spacing: -1px" >
+                <p style="color:#fff; font-size: .55rem; font-weight: 600; line-height:10px" >
                   ${vehicle.vehId}
                 </p>
                 <p id="lineNum" style="color:#fff; font-size: .95rem; font-weight: 800; letter-spacing: -1px; line-height: 15px" >
@@ -538,14 +538,17 @@ export default function App() {
     }
   }
 
+  if (onboarding) {
+    return <Navigate to="/onboarding" />
+  }
+
   if (!user) {
     return <Navigate to="/logowanie" />
   }
 
-
   return (
     <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
-      {vehicles.length === 0 && <div className='w-full h-dvh z-1000 absolute flex justify-center items-center'>
+      {vehicles.length === 0 && <div className='w-full h-dvh z-20000 absolute flex justify-center items-center'>
         <LoadingScreen />
       </div>}
 
