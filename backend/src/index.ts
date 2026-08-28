@@ -1,7 +1,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { VehicleTimetable, BusStopTimetable, BusStopData, Vehicle, TimetableRouteList, Timetable } from './types/index'
-import { transit_realtime } from 'gtfs-realtime-bindings'
+import GtfsRealtimeBindings from "gtfs-realtime-bindings"
 
 export interface Env {
   KV: KVNamespace
@@ -100,10 +100,24 @@ export default {
     }
 
     // ===== DISCOVERY =====
-    if(path === '/discovery') {
+    if (path === '/discovery') {
       return new Response(JSON.stringify({
         paths: ['/discovery', '/stops', '/stop[stopId]', '/route/[routeId]', '/vehicles', '/old_vehicles', '/list', '/vehicles/[vehicleId]/next-stop', '/timetable_route_list/[stopId]', '/timetable/[stopId];[routeId]'] 
       }), {
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+      })
+    }
+
+
+
+    // ===== ALERTS =====
+    if (path === '/alerts') {
+      const response = await fetch('https://cdn.zbiorkom.live/gtfs-rt/lodz.pb')
+      const buffer = await response.arrayBuffer()
+      const feed = GtfsRealtimeBindings.transit_realtime.Alert.decode(new Uint8Array(buffer))
+
+      // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ---- OGRANĄĆ ---- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      return new Response(JSON.stringify(feed), {
         headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
       })
     }
@@ -345,7 +359,7 @@ export default {
       if (VEHICLES_CACHE.vehicleData.length === 0 || (Math.floor(Date.now() / 1000) - VEHICLES_CACHE.meta) > 10) {
         const response = await fetch('https://cdn.zbiorkom.live/gtfs-rt/lodz.pb')
         const buffer = await response.arrayBuffer()
-        const feed = transit_realtime.FeedMessage.decode(new Uint8Array(buffer))
+        const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buffer))
 
         const vehiclesMap: any = {}
   
