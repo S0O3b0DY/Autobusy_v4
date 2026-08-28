@@ -30,7 +30,7 @@ export const faqData = [
   {
     id: 6,
     header: "W jaki sposób zainstalować aplikacje?",
-    answer: `Z serwisu można korzystać zarówno online - przez stronę internetową lub instalując ją na urządzeniu mobilnym. Pełny przewodnik instalacji znajduje się pod adresem: https://autobusy.web.app/instalaja`
+    answer: `Z serwisu można korzystać zarówno online - przez stronę internetową lub instalując ją na urządzeniu mobilnym. Pełny przewodnik instalacji znajduje się pod adresem: https://autobusy.web.app/jak-zainstalowac`
   },
   {
     id: 7,

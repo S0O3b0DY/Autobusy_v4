@@ -12,23 +12,23 @@ const STOP_ICON_COLORS: Record<StopIconType, [string, string]> = {
 
 const VEHICLE_COLORS = {
   light: {
-    defaultBus: "#18295e",
-    selectedBus: "#084202",
-    busGroup: "#2a4aa3",
+    defaultBus: "#18295eee",
+    selectedBus: "#084202ee",
+    busGroup: "#2a4aa3ee",
 
-    defaultTram: "#7e2014",
-    selectedTram: "#084202",
-    tramGroup: "#af4202",
+    defaultTram: "#7e2014ee",
+    selectedTram: "#084202ee",
+    tramGroup: "#af4202ee",
   },
 
   dark: {
-    defaultBus: "#222",
-    selectedBus: "#084202",
-    busGroup: "#448041",
+    defaultBus: "#222222ee",
+    selectedBus: "#084202ee",
+    busGroup: "#448041ee",
 
-    defaultTram: "#913911",
-    selectedTram: "#084202",
-    tramGroup: "#a4935d",
+    defaultTram: "#913911ee",
+    selectedTram: "#084202ee",
+    tramGroup: "#a4935dee",
   }
 }
 

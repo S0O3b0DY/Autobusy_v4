@@ -48,6 +48,7 @@ export default function OnboardingStops() {
   const { query, setQuery, favoriteStops, setFavoriteStops } = useAppStore()
   const { userLoggedIn, user } = useAuth()
 
+
   // Algorytm wyszukiwania (min. 3 znaki)
   const filteredStops = useMemo(() => {
     const normalize = (str: string) => str.toLowerCase().normalize("NFD").trim()
@@ -118,10 +119,10 @@ export default function OnboardingStops() {
 
   return (
     <>
-      <h1 className="text-2xl md:text-3xl font-black text-neutral-900 mb-3 text-center md:text-left">
+      <h1 className="text-2xl md:text-3xl font-black text-neutral-900 dark:text-white mb-3 text-center md:text-left">
         Z jakich przystanków odjeżdżasz?
       </h1>
-      <p className="text-sm font-medium text-neutral-600 mb-6 text-center md:text-left">
+      <p className="text-sm font-medium text-neutral-600 dark:text-zinc-400 mb-6 text-center md:text-left">
         Zapisz codzienne przystanki, aby łatwo sprawdzać odjazdy na żywo.
       </p>
 
@@ -136,7 +137,7 @@ export default function OnboardingStops() {
               </div>
               <input
                 type="text"
-                className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
+                className="w-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl py-2.5 pl-10 pr-10 text-[14px] text-neutral-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm"
                 placeholder="Szukaj przystanku ..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -144,7 +145,7 @@ export default function OnboardingStops() {
               {query && (
                 <button 
                   onClick={() => setQuery("")}
-                  className="absolute inset-y-0 right-3 flex items-center text-red-500 hover:text-red-400 dark:hover:text-red-400 cursor-pointer"
+                  className="absolute inset-y-0 right-3 flex items-center text-red-500 dark:text-red-400 hover:text-red-400 dark:hover:text-red-300 cursor-pointer"
                 >
                   <X size="xs" />
                 </button>
@@ -156,7 +157,7 @@ export default function OnboardingStops() {
           <div className="flex-1 overflow-y-auto custom-scrollbar p-2">
 
             {query.length < 3 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 dark:text-zinc-500 text-center px-6">
                 <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
                     <InfoCircle size="md" className="opacity-50" />
                 </div>
@@ -165,7 +166,7 @@ export default function OnboardingStops() {
                 </p>
               </div>
             ) : query.length >= 3 && filteredStops.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+              <div className="flex flex-col items-center justify-center py-10 text-zinc-400 dark:text-zinc-500 text-center px-6">
                 <p className="text-[13px] font-medium">
                   brak znalezien {query}
                 </p>
@@ -178,7 +179,7 @@ export default function OnboardingStops() {
                     onClick={() => addToFavorites(stop)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group text-left active:scale-[0.98] cursor-pointer hover:ring hover:ring-zinc-300 dark:hover:ring-zinc-800"
                   >
-                    <div className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
+                    <div className="bg-zinc-100 dark:bg-zinc-800 p-2 rounded-lg text-zinc-400 dark:text-zinc-500 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors">
                       <PinAlt size="sm" />
                     </div>
                     
@@ -186,7 +187,7 @@ export default function OnboardingStops() {
                       <h4 className="text-[14px] font-bold text-zinc-700 dark:text-zinc-200 truncate leading-tight">
                         {stop.n}
                       </h4>
-                      <p className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight">
+                      <p className="text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-tight">
                         ID: {stop.id} | c{stop.c}
                       </p>
                     </div>
@@ -199,12 +200,12 @@ export default function OnboardingStops() {
         <div className="w-full md:w-[50%] bg-zinc-50/50 dark:bg-zinc-900/20 p-4 flex flex-col gap-4 border-t md:border-t-0 border-zinc-200/50 dark:border-zinc-800/50 shrink-0">
           {/* HEADER */}
           <div className="flex flex-row items-center">
-            <h3 className="flex-1 text-[15px] font-bold leading-none tracking-tight">
+            <h3 className="flex-1 text-[15px] font-bold leading-none tracking-tight text-neutral-900 dark:text-zinc-100">
               Zapisane Przystanki
             </h3>
             {favoriteStops.length > 0 && <button
               onClick={() => setFavoriteStops([])}
-              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-red-500 transition-colors cursor-pointer"
+              className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors cursor-pointer"
             >
               <Trash size="sm"/>
             </button>}
@@ -218,24 +219,24 @@ export default function OnboardingStops() {
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors group text-left active:scale-[0.98] cursor-pointer hover:ring hover:ring-zinc-300 dark:hover:ring-zinc-800"
               >
                 <div
-                  className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-zinc-400 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors flex items-center justify-center flex-col cursor-pointer"
+                  className="bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-lg text-zinc-400 dark:text-zinc-500 group-hover:text-blue-500 group-hover:bg-blue-50 dark:group-hover:bg-blue-500/10 transition-colors flex items-center justify-center flex-col cursor-pointer"
                   onClick={() => addToFavorites(busStopsMap.get(favStop))}
                   role="button"
                 >
                   <Eraser size="sm" />
-                  <span className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight group-hover:text-blue-500 transition-colors">USUŃ</span>
+                  <span className="text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-tight group-hover:text-blue-500 transition-colors">USUŃ</span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <h4 className="text-[14px] font-bold text-zinc-700 dark:text-zinc-200 truncate leading-tight">
                     {busStopsMap.get(favStop)?.n}
                   </h4>
-                  <p className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-tight">
+                  <p className="text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-tight">
                     ID: {favStop} | C{busStopsMap.get(favStop)?.c}
                   </p>
                 </div>
               </button>
-            )) : <div className="flex flex-col items-center justify-center py-10 text-zinc-400 text-center px-6">
+            )) : <div className="flex flex-col items-center justify-center py-10 text-zinc-400 dark:text-zinc-500 text-center px-6">
                 <div className="bg-zinc-100 dark:bg-zinc-900 p-3 rounded-full mb-3">
                     <InfoCircle size="md" className="opacity-50" />
                 </div>

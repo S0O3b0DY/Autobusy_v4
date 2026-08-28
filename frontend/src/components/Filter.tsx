@@ -4,11 +4,11 @@
 // hooks
 import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
-import { useAppStore, INIT_SHOWN_LINES } from "../lib/store"
+import { useAppStore } from "../lib/store"
 import { useAuth } from "../contexts/AuthContext"
 
 // components
-import { Train, Bus, Trash, Checks, X, RotateCw } from "@boxicons/react"
+import { Train, Bus, Trash, Checks, X } from "@boxicons/react"
 
 // types
 // constants
@@ -49,9 +49,9 @@ export default function Filter() {
     setShownLines(shownLines.filter(line => !currentLines.includes(line)))
   }
 
-  const restoreToDefaults = () => {
-    setShownLines(INIT_SHOWN_LINES)
-  }
+  // const restoreToDefaults = () => {
+  //   setShownLines(INIT_SHOWN_LINES)
+  // }
 
   const currentList = liveVehiclesList[activeTab]
 
@@ -134,13 +134,13 @@ export default function Filter() {
             >
               <Trash size="xs" /> {t('filter.actions.clear')}
             </button>
-            <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
+            {/* <div className="w-px h-4 bg-zinc-300 dark:bg-zinc-700" />
             <button 
               onClick={restoreToDefaults}
               className="flex items-center gap-1 text-[11px] font-bold text-zinc-500 hover:text-green-500 transition-colors cursor-pointer"
             >
               <RotateCw size="xs" /> {t('filter.actions.reset')}
-            </button>
+            </button> */}
           </div>
         </div>
 

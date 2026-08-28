@@ -54,7 +54,7 @@ export default function ThemeToggle() {
         className="group w-32 h-9 bg-white dark:bg-zinc-900 backdrop-blur-md 
                    hover:bg-zinc-50 dark:hover:bg-zinc-800 border border-zinc-200 
                    dark:border-zinc-800 rounded-full px-3 flex items-center gap-2 
-                   transition-all shadow-sm active:scale-95 z-10"
+                   transition-all shadow-sm active:scale-95 z-10 cursor-pointer"
       >
         <div className="flex items-center justify-center text-blue-500 dark:text-blue-400">
           <img src={SUPPORTED_LANGUAGES[i18n.language.split("-")[0]].flagUrl} alt={i18n.language.split("-")[0]} className='w-5.5'/>

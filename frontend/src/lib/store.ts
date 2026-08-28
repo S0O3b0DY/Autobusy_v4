@@ -34,6 +34,8 @@ interface AppStore {
   setQuery: (text: string) => void
   favoriteStops: number[]
   setFavoriteStops: (data: number[]) => void
+  downloading: boolean,
+  setDownloading: (data: boolean) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -61,4 +63,6 @@ export const useAppStore = create<AppStore>((set) => ({
   setQuery: (text: string) => set({ query: text }),
   favoriteStops: [],
   setFavoriteStops: (data: number[]) => set({ favoriteStops: data }),
+  downloading: false,
+  setDownloading: (data: boolean) => set({ downloading: data })
 }))

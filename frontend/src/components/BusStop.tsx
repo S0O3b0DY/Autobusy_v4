@@ -31,7 +31,7 @@ type Props = {
 
 export default function BusStop({ routeStopsRef }: Props) {
   const { selectedBusStop, setSelectedBusStop, setMenuState, map, vehicles, setSelectedVehicle, shownLines,
-    setShownLines, favoriteStops, setFavoriteStops } = useAppStore()
+    setShownLines, favoriteStops, setFavoriteStops, selectedVehicle } = useAppStore()
   const { t } = useTranslation()
   const { userLoggedIn } = useAuth()
 
@@ -340,9 +340,7 @@ export default function BusStop({ routeStopsRef }: Props) {
                 key={dep.routeID}
                 className={clsx(
                   "grid grid-cols-[3.5rem_1fr_5rem] gap-2 px-2 py-2 items-center rounded-lg transition-colors cursor-pointer hover:ring hover:ring-white/50",
-                  isLive
-                    ? "bg-green-100/60 dark:bg-green-500/15" 
-                    : "hover:bg-zinc-100 dark:hover:bg-zinc-800/50"
+                  isLive ? "bg-green-100/60 dark:bg-green-500/15" : "hover:bg-zinc-100 dark:hover:bg-zinc-800/50", dep.routeID === selectedVehicle?.routeId && "ring-2! ring-inset ring-blue-500!"
                 )}
                 onClick={() => handleSetSelectedVehicle(dep.routeID)}
               >

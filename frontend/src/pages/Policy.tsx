@@ -1,87 +1,211 @@
 // Copyright (c) 2026 Szymon Piera. All rights reserved.
 // Wszelkie prawa zastrzeżone.
 
-import { Link } from "react-router-dom"
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, UserCheck, Key, Database, Location, HardDrive } from '@boxicons/react'
+
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+import AppCTA from '../components/AppCTA'
+import { Helmet } from 'react-helmet'
 
 export default function Policy() {
-  return <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 font-sans text-gray-800">
-  <div className="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
-    
-    <h1 className="text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">Polityka Prywatności</h1>
-    <p className="text-sm text-gray-500 mb-8">Ostatnia aktualizacja: 2026 r.</p>
+  const navigate = useNavigate()
+  // const [copiedEmail, setCopiedEmail] = useState(false)
+  // const contactEmail = 'szymon.pira@gmail.com'
 
-    <div className="space-y-6 text-base leading-relaxed text-gray-600">
-      
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">1. Informacje ogólne</h2>
-        <p>
-          Niniejsza Polityka Prywatności określa zasady przetwarzama, przechowywania i ochrony danych użytkowników korzystających z aplikacji i serwisu internetowego (dalej jako "Aplikacja"). Administratorem Danych Osobowych jest <span className="text-gray-900 font-medium">Szymon Piera</span>, kontaktowy adres e-mail: <span className="text-cyan-600 font-medium">szymon.pira@gmail.com</span>.
-        </p>
-      </section>
+  // const handleCopyEmail = async () => {
+  //   try {
+  //     await navigator.clipboard.writeText(contactEmail)
+  //     setCopiedEmail(true)
+  //     setTimeout(() => setCopiedEmail(false), 2000)
+  //   } catch (err) {
+  //     console.error('Błąd kopiowania adresu e-mail', err)
+  //   }
+  // }
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">2. Logowanie OAuth i zakres zbieranych danych</h2>
-        <p className="mb-3">
-          Aplikacja umożliwia bezpieczne uwierzytelnianie i utworzenie konta za pomocą zewnętrznych dostawców tożsamości (Protokół OAuth): <strong>Google, Facebook, Microsoft oraz GitHub</strong>. Usługa ta jest realizowana za pośrednictwem platformy <strong>Firebase Authentication</strong>.
-        </p>
-        <p className="mb-3">W przypadku logowania przez OAuth, w naszej bazie danych zapisujemy następujące informacje:</p>
-        <ul className="list-disc list-inside pl-2 space-y-1 mb-3">
-          <li>Unikalny identyfikator użytkownika generowany przez system (<span className="text-gray-900 font-mono text-sm">UUID</span>),</li>
-          <li>Adres e-mail,</li>
-          <li>Nazwa użytkownika pobrana od dostawcy (Providera),</li>
-          <li>Link do avatara (zdjęcia profilowego),</li>
-          <li>Data założenia konta oraz data ostatniego logowania.</li>
-        </ul>
-        <p>
-          Dodatkowo, w celu świadczenia głównej funkcjonalności aplikacji, na koncie zalogowanego użytkownika przechowujemy spersonalizowane dane konfiguracyjne: <strong>identyfikatory (ID) ulubionych przystanków oraz numery ulubionych linii komunikacyjnych</strong>. Dane te służą wyłącznie synchronizacji Twoich ustawień między urządzeniami.
-        </p>
-      </section>
+  return (
+    <>
+      <Helmet>
+        <title>Polityka Prywatności - UrbanTransit</title>
+      </Helmet>
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">3. Dane geolokalizacyjne (GPS)</h2>
-        <p>
-          Aplikacja <strong>nie zbiera, nie przetwarza ani nie przechowuje</strong> dokładnych danych lokalizacyjnych (GPS) Twojego urządzenia. Wyświetlanie pozycji pojazdów komunikacji miejskiej oraz wyszukiwanie połączeń odbywa się bez śledzenia fizycznego położenia użytkownika.
-        </p>
-      </section>
+      <AppCTA />
+      <Header />
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">4. Przechowywanie danych na urządzeniu (LocalStorage i Firebase)</h2>
-        <p className="mb-2">Aplikacja wykorzystuje pamięć podręczną urządzenia użytkownika w celach technicznych:</p>
-        <ul className="list-disc list-inside pl-2 space-y-1">
-          <li><strong>LocalStorage:</strong> Służy do lokalnego zapamiętania preferencji interfejsu, takich jak wybrany język aplikacji oraz motyw graficzny (np. tryb jasny/ciemny).</li>
-          <li><strong>Firebase SDK:</strong> Zewnętrzne skrypty platformy Firebase zarządzają tokenami sesyjnymi, co pozwala na bezpieczne utrzymanie zalogowania użytkownika bez konieczności wpisywania danych przy każdym uruchomieniu aplikacji.</li>
-        </ul>
-      </section>
+      <main className="mb-22 pt-28 max-w-4xl px-5 relative left-[50%] -translate-x-[50%]">
+        
+        {/* POWRÓT & BADGE */}
+        <div className="flex items-center justify-between gap-4 mb-6">
+          <button
+            onClick={() => navigate(-1)}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-neutral-600 hover:text-neutral-900 transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4 fill-current" />
+            Wróć
+          </button>
+        </div>
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">5. Usługi reklamowe (Google AdSense)</h2>
-        <p className="mb-2">
-          W aplikacji wyświetlane są reklamy dostarczane przez sieć Google AdSense. 
-        </p>
-        <ul className="list-disc list-inside pl-2 space-y-1">
-          <li>Google oraz dostawcy zewnętrzni używają plików cookie do wyświetlania reklam na podstawie Twoich wcześniejszych odwiedzin w tej lub innych witrynach internetowych.</li>
-          <li>Mechanizm ten pozwala na dobieranie reklam spersonalizowanych, dopasowanych do potencjalnych zainteresowań użytkownika.</li>
-          <li>Zarządzanie preferencjami reklam oraz całkowita rezygnacja z personalizacji jest możliwa w każdej chwili na stronie <a href="https://adssettings.google.com" target="_blank" className="text-cyan-600 underline hover:text-cyan-500">Ustawień reklam Google</a>.</li>
-        </ul>
-      </section>
+        {/* NAGŁÓWEK HERO */}
+        <header className="mb-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-neutral-900 tracking-tight leading-tight mb-3">
+            Polityka Prywatności
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-500 font-mono">
+            Ostatnia aktualizacja: 2026 r. • Administrator Danych: Szymon Piera
+          </p>
+        </header>
 
-      <section>
-        <h2 className="text-xl font-bold text-gray-950 mb-3">6. Okres przechowywania i usuwanie danych (RODO)</h2>
-        <p className="mb-2">
-          Dane profilowe oraz zapisane ulubione linie/przystanki są przechowywane przez okres aktywności konta użytkownika. 
-        </p>
-        <p>
-          Każdemu użytkownikowi przysługuje prawo do wglądu w swoje dane, ich modyfikacji oraz żądania całkowitego zaprzestania ich przetwarzania. Usunięcie konta skutkuje bezpowrotnym skasowaniem wszystkich zebranych danych z bazy Firebase. W celu realizacji swoich praw lub w przypadku pytań, prosimy o kontakt pod adresem: <span className="text-cyan-600 font-medium">szymon.pira@gmail.com</span>.
-        </p>
-      </section>
+        {/* ZAWARTOŚĆ POLITYKI */}
+        <div className="space-y-8 text-neutral-700 text-sm sm:text-base leading-relaxed">
+          
+          {/* 1. INFORMACJE OGÓLNE */}
+          <section className="bg-white border-2 border-neutral-300 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-neutral-900 text-white flex items-center justify-center shrink-0">
+                <UserCheck className="w-5 h-5 fill-current" />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900">1. Informacje ogólne</h2>
+            </div>
+            <p className="text-neutral-600">
+              Niniejsza Polityka Prywatności określa zasady przetwarzania, przechowywania i ochrony danych użytkowników korzystających z aplikacji i serwisu internetowego (dalej jako "Aplikacja"). Administratorem Danych Osobowych jest <strong className="text-neutral-900 font-semibold">Szymon Piera</strong>.
+            </p>
+          </section>
 
-    </div>
-    
-    <div className="mt-8 pt-6 border-t border-gray-200 text-center">
-      <Link to="/" className="text-sm font-semibold text-cyan-600 hover:text-cyan-500 transition-colors">
-        &larr; Powrót do mapy głównej
-      </Link>
-    </div>
-  </div>
-</div>
+          {/* 2. LOGOWANIE OAUTH & PRZECHOWYWANE DANE */}
+          <section className="bg-white border-2 border-neutral-300 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-200 flex items-center justify-center shrink-0">
+                <Key className="w-5 h-5 fill-current" />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900">2. Logowanie OAuth i zakres danych</h2>
+            </div>
+            <p className="mb-4 text-neutral-600">
+              Aplikacja umożliwia bezpieczne uwierzytelnianie za pomocą dostawców tożsamości (Protokół OAuth): <strong>Google, Facebook, Microsoft oraz GitHub</strong>, obsługiwanych przez platformę <strong>Firebase Authentication</strong>.
+            </p>
+
+            <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-4 mb-4">
+              <h3 className="text-xs font-mono uppercase text-neutral-500 font-bold mb-3 flex items-center gap-1.5">
+                <Database className="w-4 h-4 fill-current" /> Zapisywane w bazie Firebase:
+              </h3>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-neutral-700">
+                <li className="flex items-center gap-2 bg-white p-2 rounded-lg border border-neutral-200">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span>Unikalny identyfikator (<code className="font-mono bg-neutral-100 px-1 py-0.5 rounded text-neutral-900">UUID</code>)</span>
+                </li>
+                <li className="flex items-center gap-2 bg-white p-2 rounded-lg border border-neutral-200">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span>Adres e-mail</span>
+                </li>
+                <li className="flex items-center gap-2 bg-white p-2 rounded-lg border border-neutral-200">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span>Nazwa użytkownika (z profilu)</span>
+                </li>
+                <li className="flex items-center gap-2 bg-white p-2 rounded-lg border border-neutral-200">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span>Link do avatara</span>
+                </li>
+                <li className="flex items-center gap-2 bg-white p-2 rounded-lg border border-neutral-200 col-span-1 sm:col-span-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"></span>
+                  <span>Data założenia konta oraz data ostatniego logowania</span>
+                </li>
+              </ul>
+            </div>
+
+            <p className="text-neutral-600 text-sm">
+              Na koncie zalogowanego użytkownika synchronizujemy również ustawienia personalizacji: <strong>identyfikatory ulubionych przystanków oraz numerów linii</strong>.
+            </p>
+          </section>
+
+          {/* 3. BRAK GEOLOKALIZACJI */}
+          <section className="bg-emerald-50/60 border-2 border-emerald-200 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center shrink-0">
+                <Location className="w-5 h-5 fill-current" />
+              </div>
+              <h2 className="text-xl font-bold text-emerald-950">3. Dane geolokalizacyjne (GPS)</h2>
+            </div>
+            <p className="text-emerald-900/90 text-sm sm:text-base">
+              Aplikacja <strong>nie zbiera, nie przetwarza ani nie przechowuje</strong> dokładnych danych lokalizacyjnych (GPS) Twojego urządzenia. Prezentacja pozycji pojazdów oraz rozkładów odbywa się bez śledzenia położenia fizycznego użytkownika.
+            </p>
+          </section>
+
+          {/* 4. LOCALSTORAGE I FIREBASE */}
+          <section className="bg-white border-2 border-neutral-300 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 border border-purple-200 flex items-center justify-center shrink-0">
+                <HardDrive className="w-5 h-5 fill-current" />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900">4. Przechowywanie danych na urządzeniu</h2>
+            </div>
+            <div className="space-y-3 text-neutral-600">
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                <strong className="text-neutral-900 font-bold block mb-1">LocalStorage</strong>
+                Używany do lokalnego zachowania preferencji interfejsu (np. wybrany język oraz motyw jasny/ciemny).
+              </div>
+              <div className="p-3 bg-neutral-50 rounded-xl border border-neutral-200">
+                <strong className="text-neutral-900 font-bold block mb-1">Firebase SDK</strong>
+                Przechowuje bezpieczne tokeny sesyjne, zapobiegając konieczności ponownego logowania przy każdym otwarciu Aplikacji.
+              </div>
+            </div>
+          </section>
+
+          {/* 5. GOOGLE ADSENSE */}
+          {/* <section className="bg-white border-2 border-neutral-300 rounded-2xl p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0">
+                <Shield className="w-5 h-5 fill-current" />
+              </div>
+              <h2 className="text-xl font-bold text-neutral-900">5. Usługi reklamowe (Google AdSense)</h2>
+            </div>
+            <p className="text-neutral-600 mb-3">
+              W Aplikacji wyświetlane są reklamy sieci Google AdSense, które wykorzystują pliki cookie w celu dopasowania treści do Twoich zainteresowań.
+            </p>
+            <a
+              href="https://adssettings.google.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-xs font-bold font-mono text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl transition-colors"
+            >
+              Ustawienia reklam Google
+              <Link className="w-3.5 h-3.5 fill-current" />
+            </a>
+          </section> */}
+
+          {/* 6. RODO & KONTAKT */}
+          <section className="bg-neutral-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="max-w-lg">
+              <span className="text-xs font-mono uppercase text-neutral-400 font-bold block mb-1">
+                6. Prawa użytkownika (RODO)
+              </span>
+              <h2 className="text-2xl font-bold mb-2">Usuwanie i modyfikacja danych</h2>
+              <p className="text-sm text-neutral-300 leading-relaxed">
+                Masz prawo do wglądu, modyfikacji oraz żądania całkowitego usunięcia konta. Usunięcie profilu skutkuje bezpowrotnym skasowaniem Twoich danych z bazy Firebase. Aby tego dokonać należy wypełnić formularz kontaktowy.
+              </p>
+            </div>
+            {/* 
+            <div className="w-full md:w-auto flex flex-col items-center gap-2">
+              <div className="w-full sm:w-auto px-4 py-3 bg-neutral-800 border border-neutral-700 rounded-xl text-xs font-mono text-neutral-300 flex items-center justify-between gap-3">
+                <span className="flex items-center gap-2">
+                  <Envelope className="w-4 h-4 fill-neutral-400" />
+                  {contactEmail}
+                </span>
+                <button
+                  onClick={handleCopyEmail}
+                  className="px-3 py-1.5 bg-white text-neutral-900 font-sans font-bold text-xs rounded-lg hover:bg-neutral-200 transition-colors cursor-pointer flex items-center gap-1 shrink-0"
+                >
+                  {copiedEmail ? <Check className="w-3.5 h-3.5 fill-emerald-600" /> : <Link className="w-3.5 h-3.5 fill-current" />}
+                  {copiedEmail ? 'Skopiowano' : 'Kopiuj'}
+                </button>
+              </div>
+            </div> */}
+          </section>
+
+        </div>
+
+      </main>
+
+      <Footer />
+    </>
+  )
 }

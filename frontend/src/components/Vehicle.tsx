@@ -19,8 +19,8 @@ import * as BSD from './../const/stops.ts'
 
 // other
 import clsx from "clsx"
-import { app } from './../lib/firebase.ts'
-import { getDatabase, ref, push, get } from "firebase/database"
+import { dbR } from './../lib/firebase.ts'
+import { ref, push, get } from "firebase/database"
 import posthog from "posthog-js"
 import { getUserJWTToken } from "../utils/index.ts"
 
@@ -62,8 +62,7 @@ try {
 const busStopsMap = new Map(busStops.map(item => [item.id, item]))
 
 export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
-  const db = getDatabase(app)
-  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop,
+  const { selectedVehicle, setSelectedVehicle, setMenuState, map, setSelectedBusStop, selectedBusStop,
     setRouteBusStops, setRoutePolyline, favoriteStops, setFavoriteStops } = useAppStore()
   const { t } = useTranslation()
   const { userLoggedIn } = useAuth()
@@ -80,11 +79,11 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   const [menuVehType, setMenuVehType] = useState<boolean>(false) 
 
   async function addBus(number: number, type: string) {
-    await push(ref(db, `AUTOBUSY/${number}`), { number, type })
+    await push(ref(dbR, `AUTOBUSY/${number}`), { number, type })
   }
 
   async function getBusType(number: number): Promise<{ number: string; type: string }[] | null> {
-    const snapshot = await get(ref(db, `AUTOBUSY/${number}`))
+    const snapshot = await get(ref(dbR, `AUTOBUSY/${number}`))
     if (snapshot.exists()) {
       const entries = Object.values(snapshot.val()) as { number: string; type: string }[]
       return entries
@@ -207,6 +206,9 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               <p className="text-[12px] text-zinc-500 dark:text-zinc-400 leading-relaxed">
                 {t('vehicle.setType.description')}
               </p>
+              {vehType && <div className="flex flex-col gap-2 text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
+                  {vehType?.map((item, i) => <span className="block" key={i}>{i+1}. {item.type}</span>)}
+              </div>}
             </div>
             <button 
               onClick={() => {setMenuVehType(false)}}
@@ -278,7 +280,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
   )
 
   return (
-    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60">
+    <div className="flex flex-col h-full font-sans antialiased text-zinc-900 dark:text-zinc-100 bg-white dark:bg-zinc-950 overflow-hidden shadow-xl border border-zinc-200/60 dark:border-zinc-800/60 mb-10">
       {/* HEADER */}
       <div className="px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/50 flex items-center justify-between gap-3 bg-zinc-50 dark:bg-zinc-900/50">
         <div className="flex items-center gap-3 min-w-0">
@@ -342,7 +344,7 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
                   key={stop.busStopID}
                   className={clsx(
                     "group flex items-center gap-3 px-2 py-2 rounded-xl transition-colors cursor-pointer hover:ring hover:ring-zinc-400/50 dark:hover:ring-zinc-600/50",
-                    isLive ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50'
+                    isLive ? 'bg-blue-50/50 dark:bg-blue-500/10' : 'hover:bg-zinc-100 dark:hover:bg-zinc-800/50', Number(selectedBusStop?.id) === stop.busStopID && "ring-2! ring-inset ring-blue-500!" 
                   )}
                   onClick={() => {handleSetSelectedBusStop(stop.busStopID)}}
                 >
@@ -448,13 +450,13 @@ export default function Vehicle({ currentRouteIdRef, routeStopsRef }: Props) {
               </div>
             </div> */}
 
-            <div className="flex items-start gap-3 mb-10">
+            <div className="flex items-start gap-3 mb-10 opacity-0">
               <List size="sm" className="text-zinc-400 shrink-0 mt-0.5" />
               <div className="flex flex-col gap-2">
                 <span className="block text-[10px] uppercase font-bold text-zinc-400 tracking-wider">{t('vehicle.info.vehicleType')}</span>                
-                {vehType && <div className="flex flex-col gap-2 text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
+                {/* {vehType && <div className="flex flex-col gap-2 text-[13px] font-medium text-zinc-700 dark:text-zinc-300">
                   {vehType?.map((item, i) => <span className="block" key={i}>{i+1}. {item.type}</span>)}
-                </div>}
+                </div>} */}
                 <div>
                   <button
                     className="bg-blue-600 ring-2 ring-blue-200 rounded px-2 py-0.5 shadow active:scale-95 cursor-pointer text-xs font-bold text-zinc-300"

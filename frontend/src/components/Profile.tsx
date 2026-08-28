@@ -55,9 +55,9 @@ export default function Profile() {
   // --- WIDOK ZALOGOWANEGO ---
   if (userLoggedIn) {
     return (
-      <div ref={cardRef} className="w-full mx-auto bg-white dark:bg-zinc-900 border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden">
+      <div ref={cardRef} className="w-full mx-auto bg-white dark:bg-zinc-950 border border-zinc-200/60 dark:border-zinc-800/60 overflow-hidden">
         {/* Header Profilu */}
-        <div className="px-5 py-4 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-200/50 dark:border-zinc-800/50">
+        <div className="py-4 bg-zinc-50 dark:bg-zinc-950 border-b border-zinc-200/50 dark:border-zinc-800/50 px-4">
           <div className="max-w-md relative left-[50%] -translate-x-[50%] flex items-center gap-4">
             <div className="relative shrink-0">
               {user.photoURL ? (
@@ -79,7 +79,7 @@ export default function Profile() {
         </div>
 
         {/* Statystyki / Dane */}
-        <div className="py-4 space-y-3 max-w-md relative left-[50%] -translate-x-[50%]">
+        <div className="py-4 px-4 space-y-3 max-w-120 relative left-[50%] -translate-x-[50%]">
           <div className="grid grid-cols-2 gap-2">
             <div className="p-3 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/50">
               <span className="block text-[9px] font-black uppercase text-zinc-400 tracking-widest mb-1">{t('profile.stats.activeFilters')}</span>

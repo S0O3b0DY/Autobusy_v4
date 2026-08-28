@@ -17,9 +17,7 @@ html {
 }
 
 *::-webkit-scrollbar {
-  /* display: none !important; */
   width: 8px !important;
-  /* height: 0 !important; */
 }
 *::-webkit-scrollbar-thumb {
   background: #7e7e7e6b;
@@ -28,18 +26,10 @@ html {
 *::-webkit-scrollbar-thumb:hover {
   background: #7e7e7ead;
 }
-/* 
-* {
-  scrollbar-width: none !important;
-}
 
-* {
-  -ms-overflow-style: none !important;
+html {
+  background: oklch(14.1% 0.005 285.823);
 }
-
-* {
-  -webkit-overflow-scrolling: touch;
-} */
 
 @layer base {
   :root {
@@ -51,6 +41,7 @@ html {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  
   body {
     @apply bg-bg-1 dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100;
   }
@@ -60,7 +51,7 @@ html {
   }
 
   .maplibregl-ctrl-icon {
-    @apply dark:bg-[url(/public/compass_icons_dark.svg)]! dark:bg-size-[10px]
+    @apply dark:bg-[url(/public/assets/compass_icons_dark.svg)]! dark:bg-size-[10px]
   }
 
   .title  {

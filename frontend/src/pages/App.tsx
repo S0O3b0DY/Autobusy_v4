@@ -12,7 +12,8 @@ import BottomSheet from '../components/BottomSheet'
 import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
 import LoadingScreen from './../components/LoadingScreen'
-import ChangeLang from './../components/ChangeLang'
+import DownloadingBanner from "../components/DownloadingBanner.tsx"
+// import ChangeLang from './../components/ChangeLang'
 
 // types
 import type { Vehicle, RoutePolyline, BusStopData, Route, StopIconType, LocalStorageBusStopsData } from "../types"
@@ -31,6 +32,7 @@ import { doc, setDoc } from "firebase/firestore"
 import posthog from "posthog-js"
 import { Navigate } from "react-router-dom"
 import { getUserJWTToken } from "../utils"
+import { Helmet } from "react-helmet"
 
 
 
@@ -44,8 +46,7 @@ export default function App() {
 
   const { userLoggedIn, user, onboarding }: { userLoggedIn: boolean, user: User, onboarding: boolean } = useAuth()
   const { isDark, toggle } = useTheme()
-  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList,
-    setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops, liveVehiclesList } = useAppStore()
+  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList, setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops, liveVehiclesList, setDownloading } = useAppStore()
     
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
@@ -322,7 +323,7 @@ export default function App() {
         el.innerHTML = `
           <div data-ph-capture-attribute-element-name="dir: ${vehicle.dest}; num: ${vehicle.vehId}; route: ${vehicle.routeId}; line: ${vehicle.lineNum}" data-ph-capture-attribute-section="map">
             <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
-              <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;"/>
+              <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;stroke:2px solid white;"/>
             </svg>
             <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
               transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
@@ -434,9 +435,9 @@ export default function App() {
       if (currentRouteIdRef.current === routeId) return
   
       currentRouteIdRef.current = routeId
-      
+      setDownloading(true)
       const routeData: Route = await fetch(`https://v2.szymon-pira.workers.dev/${await getUserJWTToken()}:route/${routeId}`) // import.meta.env.VITE_API_URL_ROUTE+routeId
-      .then(res => res.json())
+        .then(res => res.json())
       
       const routeStops: BusStopData[] = routeData.stops
       const polyline: RoutePolyline[] = routeData.points.map(point => [point.y, point.x])
@@ -444,6 +445,7 @@ export default function App() {
   
       polylineRef.current = polyline
       routeStopsRef.current = routeStops
+      setDownloading(false)
     }
 
     // Usuń starą warstwę przed dodaniem nowej
@@ -547,26 +549,34 @@ export default function App() {
   }
 
   return (
-    <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
-      {vehicles.length === 0 && <div className='w-full h-dvh z-20000 absolute flex justify-center items-center'>
-        <LoadingScreen />
-      </div>}
+    <>
+      <Helmet>
+        <title>Serwis - UrbanTransit</title>
+      </Helmet>
+      <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
+        {vehicles.length === 0 && <div className='w-full h-dvh z-20000 absolute flex justify-center items-center'>
+          <LoadingScreen />
+        </div>}
 
-      <BottomSheet>
-        <Menu currentRouteIdRef={currentRouteIdRef} routeStopsRef={routeStopsRef} />
-      </BottomSheet>
+        <BottomSheet>
+          <Menu currentRouteIdRef={currentRouteIdRef} routeStopsRef={routeStopsRef} />
+        </BottomSheet>
+        
+        <div className="absolute top-4 left-4 z-10000 flex flex-col gap-2">
+          <div className='flex flex-row gap-1'>
+            <ThemeToggle isDark={isDark} toggle={toggle} />
+            {/* <ChangeLang /> */}
+            <div
+              className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center justify-center gap-2 shadow-sm z-10 text-[13px] font-bold tracking-tighttext-zinc-700 dark:text-zinc-200 min-w-9'
+              ref={countdownRef}
+            ></div>
+          </div>
+          <DownloadingBanner />
+        </div>
 
-      <div className='absolute top-4 left-4 z-10000 flex flex-row gap-1'>
-        <ThemeToggle isDark={isDark} toggle={toggle} />
-        <ChangeLang />
-        <div
-          className='bg-white h-9 w-9 dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 rounded-full flex items-center justify-center gap-2 shadow-sm z-10 text-[13px] font-bold tracking-tighttext-zinc-700 dark:text-zinc-200 min-w-9'
-          ref={countdownRef}
-        ></div>
+        <div ref={mapContainer} className="w-full h-screen" />
       </div>
-
-      <div ref={mapContainer} className="w-full h-screen" />
-    </div>
+    </>
   )
 }
 
@@ -614,7 +624,8 @@ function createStopIcon(type: StopIconType): Promise<HTMLImageElement> {
 }
 
 export function resolveIconType(stop: BusStopData, index: number, total: number, selectedId: number | undefined,): StopIconType {
-  if (stop.id === selectedId) return 'selected'
+  // nwm dlaczego tu musi być == zamiast === (=== nie działa)
+  if (stop.id == selectedId) return 'selected'
   if (index === 0)            return 'first'
   if (index === total - 1)    return 'last'
   return 'default'
