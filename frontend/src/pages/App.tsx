@@ -61,13 +61,13 @@ export default function App() {
   
   useEffect(() => {
     const fetchFunc1 = async () => {
-      const token = await getUserJWTToken();
+      const token = await getUserJWTToken()
       const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:stops`)
       return await res.json()
     }
 
     const fetchFunc2 = async () => {
-      const token = await getUserJWTToken();
+      const token = await getUserJWTToken()
       const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:alerts`)
       const data = await res.json()
       setDisparcherMsg(data)
@@ -146,7 +146,7 @@ export default function App() {
         marker.addTo(map!)
       })
 
-      if (polylineRef.current?.length) {
+      if (selectedVehicle) {
         createRoute(selectedVehicle, true)
       }
     })
