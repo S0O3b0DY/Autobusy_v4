@@ -28,7 +28,7 @@ html {
 }
 
 html {
-  background: oklch(14.1% 0.005 285.823);
+  background: #535557;
 }
 
 @layer base {
@@ -47,11 +47,11 @@ html {
   }
 
   .maplibregl-ctrl-group {
-    @apply dark:bg-zinc-900! mt-4! mr-4! h-9! w-9! flex! items-center! justify-center! rounded-full!
+    @apply dark:bg-zinc-900! mt-4! mr-4! h-9! w-9! flex! items-center! justify-center! rounded-full! cursor-pointer!
   }
 
   .maplibregl-ctrl-icon {
-    @apply dark:bg-[url(/public/assets/compass_icons_dark.svg)]! dark:bg-size-[10px]
+    @apply dark:bg-[url(/public/assets/compass_icons_dark.svg)]! dark:bg-size-[10px] cursor-pointer!
   }
 
   .title  {

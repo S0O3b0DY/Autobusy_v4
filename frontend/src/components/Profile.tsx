@@ -7,6 +7,8 @@ import { useLayoutEffect, useRef } from "react"
 import { useAppStore } from "../lib/store"
 import { useAuth } from '../contexts/AuthContext.tsx'
 
+// import * as Sentry from '@sentry/react'
+
 // components
 import { User, ArrowOutRightSquareHalf, Trash } from "@boxicons/react"
 
@@ -77,6 +79,18 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
+        {/* <button
+          onClick={() => {
+            // Send a log before throwing the error
+            Sentry.logger.info('User triggered test error', {
+              action: 'test_error_button_click',
+            });
+            throw new Error('This is your first error!');
+          }}
+        >
+          Break the world
+        </button> */}
 
         {/* Statystyki / Dane */}
         <div className="py-4 px-4 space-y-3 max-w-120 relative left-[50%] -translate-x-[50%]">

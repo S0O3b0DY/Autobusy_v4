@@ -43,11 +43,11 @@ export default function DownloadingBanner() {
   )
 
   return (
-    <div className="fixed top-15 md:top-4 left-0 right-0 z-50 flex justify-center px-3 pointer-events-none">
+    <div className="z-50 flex justify-center pointer-events-none min-w-65">
       <div
         ref={containerRef}
         style={{ transform: 'translateY(-80px)', opacity: 0, display: 'none' }}
-        className="w-full sm:max-w-sm bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-2 border-neutral-200 dark:border-zinc-800 rounded-2xl py-3 px-4 shadow-xl items-center gap-3 pointer-events-auto transition-colors"
+        className="w-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border-2 border-neutral-200 dark:border-zinc-800 rounded-2xl py-3 px-4 shadow-xl items-center justify-between gap-3 pointer-events-auto transition-colors"
       >
         {/* Kontener ikony z obracającym się spinnerem Boxicons */}
         <div className="flex items-center justify-center p-2 bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 rounded-xl shrink-0">

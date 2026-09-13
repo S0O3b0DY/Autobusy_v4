@@ -36,6 +36,8 @@ interface AppStore {
   setFavoriteStops: (data: number[]) => void
   downloading: boolean,
   setDownloading: (data: boolean) => void
+  disparcherMsg: any
+  setDisparcherMsg: (data: any) => void
 }
 
 export const useAppStore = create<AppStore>((set) => ({
@@ -64,5 +66,7 @@ export const useAppStore = create<AppStore>((set) => ({
   favoriteStops: [],
   setFavoriteStops: (data: number[]) => set({ favoriteStops: data }),
   downloading: false,
-  setDownloading: (data: boolean) => set({ downloading: data })
+  setDownloading: (data: boolean) => set({ downloading: data }),
+  disparcherMsg: {},
+  setDisparcherMsg: (data: any) => set({ disparcherMsg: data })
 }))

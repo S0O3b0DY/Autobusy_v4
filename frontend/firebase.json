@@ -12,6 +12,15 @@
         "source": "**",
         "destination": "/index.html"
       }
+    ],
+    "headers": [
+      {
+        "source": "/sitemap.xml",
+        "headers": [
+          { "key": "Cache-Control", "value": "max-age=0, trigger-zero, no-cache, no-store, must-revalidate" },
+          { "key": "Content-Type", "value": "application/xml" }
+        ]
+      }
     ]
   },
   "database": {

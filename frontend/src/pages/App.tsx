@@ -13,6 +13,7 @@ import Menu from '../components/Menu'
 import ThemeToggle from '../components/ThemeToggle'
 import LoadingScreen from './../components/LoadingScreen'
 import DownloadingBanner from "../components/DownloadingBanner.tsx"
+import MsgBanner from "../components/MsgBanner.tsx"
 // import ChangeLang from './../components/ChangeLang'
 
 // types
@@ -46,7 +47,7 @@ export default function App() {
 
   const { userLoggedIn, user, onboarding }: { userLoggedIn: boolean, user: User, onboarding: boolean } = useAuth()
   const { isDark, toggle } = useTheme()
-  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList, setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops, liveVehiclesList, setDownloading } = useAppStore()
+  const { selectedVehicle, setSelectedVehicle, selectedBusStop, setSelectedBusStop, map, setMap, setLiveVehiclesList, setRoutePolyline, setRouteBusStops, setMenuState, vehicles, setVehicles, shownLines, favoriteStops, liveVehiclesList, setDownloading, setDisparcherMsg } = useAppStore()
     
   const mapContainer = useRef<HTMLDivElement | null>(null)
   const markersRef = useRef<Map<number, Marker>>(new Map())
@@ -59,16 +60,23 @@ export default function App() {
 
   
   useEffect(() => {
-    const fetchFunc = async () => {
+    const fetchFunc1 = async () => {
       const token = await getUserJWTToken();
       const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:stops`)
       return await res.json()
     }
 
+    const fetchFunc2 = async () => {
+      const token = await getUserJWTToken();
+      const res = await fetch(`https://v2.szymon-pira.workers.dev/${token}:alerts`)
+      const data = await res.json()
+      setDisparcherMsg(data)
+    }
+
     const stopsData: LocalStorageBusStopsData = JSON.parse(localStorage.getItem("stops") ?? "{}")
 
     if ((!stopsData.data || Math.floor(Date.now() / 1000) - stopsData.meta > 86400) && userLoggedIn ) {
-      fetchFunc()
+      fetchFunc1()
         .then((actualData) => {
           
           localStorage.setItem(
@@ -78,6 +86,7 @@ export default function App() {
         })
         .catch((err) => console.error("Błąd pobierania:", err))
     }
+    fetchFunc2()
   }, [])
 
   // Download user data
@@ -323,10 +332,14 @@ export default function App() {
         el.innerHTML = `
           <div data-ph-capture-attribute-element-name="dir: ${vehicle.dest}; num: ${vehicle.vehId}; route: ${vehicle.routeId}; line: ${vehicle.lineNum}" data-ph-capture-attribute-section="map">
             <svg id="svg" width="78" height="100%" viewBox="0 0 79 61" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.2));">
-              <path d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z" style="fill:${color};fill-rule:nonzero;stroke:2px solid white;"/>
+              <path
+                d="M2.622,57.243C2.207,57.706 1.549,57.866 0.968,57.643C0.387,57.421 0.004,56.863 0.005,56.24C0.018,45.523 0.054,15.845 0.067,4.495C0.07,2.011 2.084,0 4.567,-0C18.331,0 59.8,0 73.571,0C76.056,0 78.071,2.015 78.071,4.5C78.071,12.62 78.071,29.63 78.071,37.75C78.071,40.235 76.056,42.25 73.571,42.25C61.151,42.25 26.739,42.25 18.053,42.25C16.773,42.25 15.554,42.795 14.7,43.749C12.046,46.714 6.083,53.376 2.622,57.243Z"
+                style="fill:${color};fill-rule:nonzero;"
+                stroke="#555"
+                stroke-width="1"
+              />
             </svg>
-            <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%;
-              transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px;">
+            <div id="dest" style="position:absolute; width:max-content; height:15px; bottom:62px; background:${color}; color:#fff; font-size:.7rem; font-weight:700; line-height:11px; left:50%; transform:translate(-50%); padding:2px 3px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:200px; outline: 1px solid #555;">
                 ${vehicle.dest}
             </div>
             <div style="position: absolute; width:100%; height:42px; bottom:18px; display:flex; flex-direction:column; justify-content: space-between; padding: 4px 6px;">
@@ -551,7 +564,7 @@ export default function App() {
   return (
     <>
       <Helmet>
-        <title>Serwis - UrbanTransit</title>
+        <title>Mapa - UrbanTransit</title>
       </Helmet>
       <div className="h-dvh bg-white dark:bg-neutral-900 text-black dark:text-white">
         {vehicles.length === 0 && <div className='w-full h-dvh z-20000 absolute flex justify-center items-center'>
@@ -562,7 +575,7 @@ export default function App() {
           <Menu currentRouteIdRef={currentRouteIdRef} routeStopsRef={routeStopsRef} />
         </BottomSheet>
         
-        <div className="absolute top-4 left-4 z-10000 flex flex-col gap-2">
+        <div className="absolute top-4 left-0 px-4 z-10000 flex flex-col md:flex-row justify-between gap-2 w-[calc(100%-50px)]">
           <div className='flex flex-row gap-1'>
             <ThemeToggle isDark={isDark} toggle={toggle} />
             {/* <ChangeLang /> */}
@@ -571,7 +584,11 @@ export default function App() {
               ref={countdownRef}
             ></div>
           </div>
-          <DownloadingBanner />
+          <div className="relative flex md:flex-row flex-col gap-1 md:gap-4">  
+            <DownloadingBanner />
+            <MsgBanner />
+          </div>
+          <div className="w-42"></div>
         </div>
 
         <div ref={mapContainer} className="w-full h-screen" />

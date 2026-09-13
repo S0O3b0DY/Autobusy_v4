@@ -21,11 +21,14 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        navigateFallbackDenylist: [/^\/__\/auth/, /^\/sitemap\.xml$/, /^\/robots\.txt$/],
+      },
       manifest: {
         name: 'UrbanTransit',
         short_name: 'UrbanTransit',
         description: 'UrbanTransit',
-        theme_color: '#ffffff',
+        theme_color: '#535557',
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -48,7 +51,7 @@ export default defineConfig({
     }),
     Sitemap({
       hostname: 'https://autobusy.web.app',
-      exclude: ['google798b769421a36d65'],
+      exclude: ['/google798b769421a36d65'],
       dynamicRoutes,
       generateRobotsTxt: true,
     })

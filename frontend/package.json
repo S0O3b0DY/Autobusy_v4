@@ -14,6 +14,7 @@
     "@boxicons/react": "^1.0.3",
     "@gsap/react": "^2.1.2",
     "@hashintel/refractive": "^0.0.4",
+    "@sentry/react": "^10.74.0",
     "@tailwindcss/vite": "^4.2.2",
     "clsx": "^2.1.1",
     "firebase": "^12.15.0",
